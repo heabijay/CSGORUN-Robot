@@ -4,6 +4,7 @@ using System.ComponentModel;
 using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Text;
+using System.Text.Json.Serialization;
 using System.Threading.Tasks;
 
 namespace CSGORUN_Robot.AppSettings
@@ -16,6 +17,8 @@ namespace CSGORUN_Robot.AppSettings
 
 
         private ProxyType _Type;
+
+        [JsonConverter(typeof(JsonStringEnumConverter))]
         public ProxyType Type
         {
             get => _Type;
@@ -30,15 +33,15 @@ namespace CSGORUN_Robot.AppSettings
         }
 
 
-        private string _Address;
-        public string Address
+        private string _Host;
+        public string Host
         {
-            get => _Address;
+            get => _Host;
             set
             {
-                if (value != _Address)
+                if (value != _Host)
                 {
-                    _Address = value;
+                    _Host = value;
                     OnPropertyChanged();
                 }
             }
@@ -61,15 +64,15 @@ namespace CSGORUN_Robot.AppSettings
         }
 
 
-        private string _Login;
-        public string Login
+        private string _Username;
+        public string Username
         {
-            get => _Login;
+            get => _Username;
             set
             {
-                if (value != _Login)
+                if (value != _Username)
                 {
-                    _Login = value;
+                    _Username = value;
                     OnPropertyChanged();
                 }
             }

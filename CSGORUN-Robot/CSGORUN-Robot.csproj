@@ -6,4 +6,12 @@
     <RootNamespace>CSGORUN_Robot</RootNamespace>
   </PropertyGroup>
 
+  <ItemGroup>
+    <PackageReference Include="HttpToSocks5Proxy" Version="1.4.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Folder Include="CSGORUN\WebSocket-Dtos\" />
+  </ItemGroup>
+
 </Project>
