@@ -3,7 +3,7 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 16
 VisualStudioVersion = 16.0.31205.134
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CSGORUN-Robot", "CSGORUN-Robot\CSGORUN-Robot.csproj", "{92610B90-99B4-445C-9623-99E828DA6ADC}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CSGORUN-Robot", "CSGORUN-Robot.csproj", "{92610B90-99B4-445C-9623-99E828DA6ADC}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
