@@ -9,53 +9,12 @@ using System.Threading.Tasks;
 
 namespace CSGORUN_Robot.Settings
 {
-    public class CSGORUN : INotifyPropertyChanged
+    public class CSGORUN
     {
-        public event PropertyChangedEventHandler PropertyChanged;
-        public void OnPropertyChanged([CallerMemberName] string prop = "") => PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(prop));
+        public List<Account> Accounts { get; set; }
 
-        private ObservableCollection<Account> _Accounts;
-        public ObservableCollection<Account> Accounts
-        {
-            get => _Accounts;
-            set
-            {
-                if (value != _Accounts)
-                {
-                    _Accounts = value;
-                    OnPropertyChanged();
-                }
-            }
-        }
+        public int? PrimaryAccountIndex { get; set; }
 
-
-        private int? _PrimaryAccountId = 0;
-        public int? PrimaryAccountId
-        {
-            get => _PrimaryAccountId;
-            set
-            {
-                if (value != _PrimaryAccountId)
-                {
-                    _PrimaryAccountId = value;
-                    OnPropertyChanged();
-                }
-            }
-        }
-
-
-        private RegexPatterns _RegexPatterns;
-        public RegexPatterns RegexPatterns
-        {
-            get => _RegexPatterns;
-            set
-            {
-                if (value != _RegexPatterns)
-                {
-                    _RegexPatterns = value;
-                    OnPropertyChanged();
-                }
-            }
-        }
+        public RegexPatterns RegexPatterns { get; set; }
     }
 }

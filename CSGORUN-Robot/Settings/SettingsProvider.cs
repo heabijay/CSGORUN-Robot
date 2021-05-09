@@ -14,8 +14,6 @@ namespace CSGORUN_Robot.Settings
     public static class SettingsProvider
     {
         private readonly static string SettingsPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "settings.json");
-        private static DateTime lastTimeFileWatcherEventRaised { get; set; } = DateTime.Now;
-        private static FileSystemWatcher SettingsWatcher { get; set; }
         private static Settings _Current { get; set; }
 
         public static Settings Provide()
@@ -40,45 +38,21 @@ namespace CSGORUN_Robot.Settings
 
                 using (StreamReader sr = new(SettingsPath))
                     _Current = await JsonSerializer.DeserializeAsync<Settings>(sr.BaseStream);
-
-                SettingsWatcher = new FileSystemWatcher(Path.GetDirectoryName(SettingsPath), Path.GetFileName(SettingsPath));
-                SettingsWatcher.NotifyFilter = NotifyFilters.LastWrite;
-                //SettingsWatcher.Changed += new FileSystemEventHandler(
-                //    (s, e) =>
-                //    {
-                //        _Current = JsonSerializer.Deserialize<Settings>(File.ReadAllText(SettingsPath));
-                //        Console.WriteLine("Settings was changed");
-                //        Console.WriteLine(JsonSerializer.Serialize(_Current, new JsonSerializerOptions() { WriteIndented = true }));
-                //    });
-                SettingsWatcher.Changed += (s, e) =>
-                {
-                    if (DateTime.Now.Subtract(lastTimeFileWatcherEventRaised).TotalMilliseconds < 500)
-                        return;
-
-                    lastTimeFileWatcherEventRaised = DateTime.Now;
-
-                    Console.WriteLine(JsonSerializer.Serialize(s, new JsonSerializerOptions() { WriteIndented = true }));
-                    var newCurrent = JsonSerializer.Deserialize<Settings>(File.ReadAllText(SettingsPath));
-                    _Current.Merge(newCurrent);
-                    Console.WriteLine("Settings was changed");
-                    Console.WriteLine(JsonSerializer.Serialize(_Current, new JsonSerializerOptions() { WriteIndented = true }));
-                };
-                SettingsWatcher.EnableRaisingEvents = true;
             }
 
             return _Current;
         }
 
 
-        private static Settings SettingsExample => new Settings
+        private static Settings SettingsExample => new()
         {
-            CSGORUN = new CSGORUN()
+            CSGORUN = new()
             {
                 Accounts = new()
                 {
                     new()
                     {
-                        AuthToken = "eyJhbGciOiJIUzI1NiIsInAccount.With.Proxy",
+                        AuthToken = "eyJhbGciOiJIUzI1NiIsInAccount.With.HTTPProxy",
                         Proxy = new()
                         {
                             Host = "Proxy.host.com",
@@ -88,7 +62,19 @@ namespace CSGORUN_Robot.Settings
                             Username = "user",
                         }
                     },
-                    new Account()
+                    new()
+                    {
+                        AuthToken = "eyJhbGciOiJIUzI1NiIsInAccount.With.SOCKS5Proxy",
+                        Proxy = new()
+                        {
+                            Host = "Proxy.host.com",
+                            Port = 80,
+                            Type = ProxyType.SOCKS5,
+                            Password = "pwd",
+                            Username = "user",
+                        }
+                    },
+                    new()
                     {
                         AuthToken = "eyJhbGciOiJIUzI1NiIsInAccount.Without.Proxy"
                     }
@@ -99,44 +85,12 @@ namespace CSGORUN_Robot.Settings
                     EN_Admins = "Pattern for english chat admins. Dont forget about bypass quatation mark using escape char.",
                     RU_Admins = "Pattern for russian chat admins. Dont forget about bypass quatation mark using escape char.",
                 }
+            },
+            Twitch = new()
+            {
+                Channels = "xQcOW, StRoGo",
+                RegexPattern = "Pattern for channel owner messages. Dont forget about bypass quatation mark using escape char."
             }
         };
-
-        //public static Settings Current
-        //{
-        //    get
-        //    {
-        //        if (_Current == null)
-        //        {
-        //            if (!File.Exists(SettingsPath))
-        //            {
-        //                Console.WriteLine("Settings created");
-        //                File.WriteAllText(SettingsPath, JsonSerializer.Serialize(new Settings(), new JsonSerializerOptions() { WriteIndented = true }));
-
-        //            }
-
-        //            _Current = JsonSerializer.Deserialize<Settings>(File.ReadAllText(SettingsPath));
-
-        //            SettingsWatcher = new FileSystemWatcher(Path.GetDirectoryName(SettingsPath), Path.GetFileName(SettingsPath));
-        //            SettingsWatcher.NotifyFilter = NotifyFilters.LastWrite;
-        //            //SettingsWatcher.Changed += new FileSystemEventHandler(
-        //            //    (s, e) =>
-        //            //    {
-        //            //        _Current = JsonSerializer.Deserialize<Settings>(File.ReadAllText(SettingsPath));
-        //            //        Console.WriteLine("Settings was changed");
-        //            //        Console.WriteLine(JsonSerializer.Serialize(_Current, new JsonSerializerOptions() { WriteIndented = true }));
-        //            //    });
-        //            SettingsWatcher.Changed += (s, e) =>
-        //            {
-        //                _Current = JsonSerializer.Deserialize<Settings>(File.ReadAllText(SettingsPath));
-        //                Console.WriteLine("Settings was changed");
-        //                Console.WriteLine(JsonSerializer.Serialize(_Current, new JsonSerializerOptions() { WriteIndented = true }));
-        //            };
-        //            SettingsWatcher.EnableRaisingEvents = true;
-        //        }
-
-        //        return _Current;
-        //    }
-        //}
     }
 }

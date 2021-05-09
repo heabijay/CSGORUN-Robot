@@ -27,7 +27,6 @@ namespace CSGORUN_Robot.Settings
                 {
                     _AuthToken = value;
                     OnPropertyChanged();
-                    Console.WriteLine("AuthToken changed");
                 }
             }
         }
@@ -44,8 +43,6 @@ namespace CSGORUN_Robot.Settings
                 {
                     _Proxy = value;
                     OnPropertyChanged();
-
-                    Console.WriteLine("Proxy changed");
                 }
             }
         }
