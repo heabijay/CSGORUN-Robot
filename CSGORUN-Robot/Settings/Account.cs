@@ -9,7 +9,7 @@ using System.Text.Json.Serialization;
 using System.Threading.Tasks;
 using System.Xml;
 
-namespace CSGORUN_Robot.AppSettings
+namespace CSGORUN_Robot.Settings
 {
     public class Account : INotifyPropertyChanged
     {
@@ -27,6 +27,7 @@ namespace CSGORUN_Robot.AppSettings
                 {
                     _AuthToken = value;
                     OnPropertyChanged();
+                    Console.WriteLine("AuthToken changed");
                 }
             }
         }
@@ -43,6 +44,8 @@ namespace CSGORUN_Robot.AppSettings
                 {
                     _Proxy = value;
                     OnPropertyChanged();
+
+                    Console.WriteLine("Proxy changed");
                 }
             }
         }

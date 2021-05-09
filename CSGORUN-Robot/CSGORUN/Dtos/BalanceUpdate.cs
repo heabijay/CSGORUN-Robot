@@ -6,9 +6,9 @@ using System.Threading.Tasks;
 
 namespace CSGORUN_Robot.CSGORUN.Dtos
 {
-    public class Withdraw
+    public class BalanceUpdate
     {
-        public double? amount { get; set; }
-        public List<object> items { get; set; }
+        public double balance { get; set; }
+        public double? added { get; set; }
     }
 }

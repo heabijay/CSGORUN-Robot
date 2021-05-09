@@ -6,9 +6,9 @@ using System.Threading.Tasks;
 
 namespace CSGORUN_Robot.CSGORUN.Dtos
 {
-    public class Withdraw
+    public class Promo
     {
-        public double? amount { get; set; }
-        public List<object> items { get; set; }
+        public string code { get; set; }
+        public string token { get; set; }
     }
 }

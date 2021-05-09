@@ -1,4 +1,6 @@
-﻿using CSGORUN_Robot.AppSettings;
+﻿using CSGORUN_Robot.Settings;
+using CSGORUN_Robot.Extensions;
+using CSGORUN_Robot.Services;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
@@ -29,10 +31,29 @@ namespace CSGORUN_Robot.Client
             }
         }
 
+        public ClientHttpService httpService { get; set; }
 
         public Client(Account account)
         {
             Account = account;
+            httpService = new ClientHttpService(account.AuthToken, account.Proxy?.ToWebProxy());
+
+            this.PropertyChanged += (s, e) =>
+            {
+                if (e.PropertyName == nameof(Account))
+                {
+                    Account.PropertyChanged += (s, e) =>
+                    {
+                        if (e.PropertyName == nameof(Account.AuthToken))
+                            httpService.UpdateToken(Account.AuthToken);
+                        else if (e.PropertyName == nameof(Account.Proxy))
+                            httpService.UpdateProxy(Account.Proxy?.ToWebProxy());
+                    };
+
+                    httpService.UpdateToken(Account.AuthToken);
+                    httpService.UpdateProxy(Account.Proxy?.ToWebProxy());
+                }
+            };
         }
     }
 }

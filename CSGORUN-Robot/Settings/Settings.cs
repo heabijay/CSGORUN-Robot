@@ -2,12 +2,15 @@
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
+using System.IO;
 using System.Linq;
+using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Text;
+using System.Text.Json;
 using System.Threading.Tasks;
 
-namespace CSGORUN_Robot.AppSettings
+namespace CSGORUN_Robot.Settings
 {
     public class Settings : INotifyPropertyChanged
     {
@@ -15,20 +18,18 @@ namespace CSGORUN_Robot.AppSettings
         public void OnPropertyChanged([CallerMemberName] string prop = "") => PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(prop));
 
 
-        private ObservableCollection<Account> _Accounts;
-        public ObservableCollection<Account> Accounts
+        private CSGORUN _CSGORUN;
+        public CSGORUN CSGORUN
         {
-            get => _Accounts;
+            get => _CSGORUN;
             set
             {
-                if (value != _Accounts)
+                if (value != _CSGORUN)
                 {
-                    _Accounts = value;
+                    _CSGORUN = value;
                     OnPropertyChanged();
                 }
             }
         }
-
-        
     }
 }

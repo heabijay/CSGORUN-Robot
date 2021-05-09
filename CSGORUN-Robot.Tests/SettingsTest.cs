@@ -1,4 +1,4 @@
-using CSGORUN_Robot.AppSettings;
+using CSGORUN_Robot.Settings;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System.Collections.Generic;
 using System.IO;
@@ -15,7 +15,7 @@ namespace CSGORUN_Robot.Tests
         [TestMethod]
         public void Serialize()
         {
-            var settings = new Settings();
+            var settings = new Settings.Settings();
             settings.Accounts = new System.Collections.ObjectModel.ObservableCollection<Account>();
             settings.Accounts.Add(
                 new Account()
