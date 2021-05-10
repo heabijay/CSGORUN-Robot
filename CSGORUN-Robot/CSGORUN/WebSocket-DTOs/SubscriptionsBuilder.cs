@@ -1,8 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace CSGORUN_Robot.CSGORUN.WebSocket_DTOs
 {
@@ -36,7 +34,7 @@ namespace CSGORUN_Robot.CSGORUN.WebSocket_DTOs
         {
             foreach (var sub in subs)
             {
-                var subStr = sub.ToString().Replace('_', '-');
+                var subStr = sub.ToStringEquivalent();
 
                 if (typesRequiresUserId.Contains(sub))
                 {

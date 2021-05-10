@@ -1,10 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace CSGORUN_Robot.CSGORUN
+﻿namespace CSGORUN_Robot.CSGORUN
 {
     public static class Routing
     {

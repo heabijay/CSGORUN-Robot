@@ -14,39 +14,57 @@ namespace CSGORUN_Robot
     public class Worker
     {
         private ILogger log;
-        private List<ClientUnit> clients { get; set; }
-        private List<IParserService> parsers { get; set; } = new List<IParserService>();
+        public List<ClientWorker> Clients { get; private set; }
+        public List<IParserService> Parsers { get; private set; } = new List<IParserService>();
 
-        public Worker(ILogger<Worker> logger, Settings.Settings settings, TwitchService service)
+        public Worker(ILogger<Worker> logger, Settings.Settings settings, TwitchService twitch, CsgorunService csgorun, List<ClientWorker> clientWorkers)
         {
             log = logger;
 
-            clients = settings.CSGORUN.Accounts.Select(t => new ClientUnit(t)).ToList();
-            parsers.Add(service);
+            Clients = clientWorkers;
+            Parsers.Add(twitch);
+            Parsers.Add(csgorun);
+
+            Parsers.ForEach(t => t.MessageReceived += OnMessageAsync);
         }
 
-        public async Task<bool> TokenTestAsync()
+        public bool TokenTest()
         {
-            log.LogInformation("[{0}] Running", nameof(TokenTestAsync));
+            log.LogInformation("[{0}] Running", nameof(TokenTest));
 
             bool isSuccess = true;
 
-            for (int i = 0; i < clients.Count; i++)
+            Parallel.For(0, Clients.Count, i =>
             {
                 try
                 {
-                    var state = await clients[i].HttpService.GetCurrentStateAsync();
-                    log.LogInformation("[{0}#{1}] {2} - {3}$", nameof(TokenTestAsync), i, state.user.name, state.user.balance);
+                    var state = Clients[i].HttpService.GetCurrentStateAsync().GetAwaiter().GetResult();
+                    log.LogInformation("[{0}#{1}] {2} - {3}$", nameof(TokenTest), i, state.user.name, state.user.balance);
                 }
                 catch (HttpRequestRawException ex)
                 {
                     isSuccess = false;
                     var innerEx = ex.InnerException as HttpRequestException;
-                    log.LogError("[{0}#{1}] {2} - {3}", nameof(TokenTestAsync), i, (int)innerEx?.StatusCode, innerEx?.StatusCode);
+                    log.LogError("[{0}#{1}] {2} - {3}", nameof(TokenTest), i, (int)innerEx?.StatusCode, innerEx?.StatusCode);
                 }
-            }
+            });
 
             return isSuccess;
+        }
+
+        public void StartParse()
+        {
+            Parsers.ForEach(t => t.Start());
+        }
+
+        public void StopParse()
+        {
+            Parsers.ForEach(t => t.Stop());
+        }
+
+        private async void OnMessageAsync(object sender, object data)
+        {
+            
         }
     }
 }

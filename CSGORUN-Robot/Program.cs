@@ -1,4 +1,5 @@
-﻿using CSGORUN_Robot.Exceptions;
+﻿using CSGORUN_Robot.Client;
+using CSGORUN_Robot.Exceptions;
 using CSGORUN_Robot.Extensions;
 using CSGORUN_Robot.Services;
 using CSGORUN_Robot.Settings;
@@ -8,7 +9,9 @@ using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Serilog;
 using System;
+using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Net.Http;
 using System.Runtime.InteropServices;
 using System.Text;
@@ -39,13 +42,32 @@ namespace CSGORUN_Robot
                 {
                     services.AddSingleton(services => SettingsProvider.Provide());
                     services.AddSingleton<TwitchService>();
+                    services.AddSingleton<CsgorunService>();
+                    services.AddSingleton<List<ClientWorker>>(t =>
+                    {
+                        var settings = t.GetService<Settings.Settings>();
+                        return settings.CSGORUN.Accounts.Select(t => new ClientWorker(t)).ToList();
+                    });
                     services.AddSingleton<Worker>();
                 })
                 .UseSerilog()
                 .Build();
 
+
+            var log = Log.Logger.ForContext<Program>();
+
+            log.Information("Welcome to CSGORUN-Robot!");
+
             var svc = ActivatorUtilities.CreateInstance<Worker>(host.Services);
-            svc.TokenTestAsync().GetAwaiter().GetResult();
+            if (!svc.TokenTest())
+            {
+                log.Fatal("Please, rewrite your tokens to be correct!");
+                return;
+            }
+
+            svc.StartParse();
+
+            
 
             //Directory.SetCurrentDirectory(AppDomain.CurrentDomain.BaseDirectory);
 

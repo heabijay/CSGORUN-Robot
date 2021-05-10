@@ -2,11 +2,10 @@
 
 namespace CSGORUN_Robot.CSGORUN.WebSocket_DTOs
 {
-    public partial class Result<T>
+    public class Result<T> where T: class
     {
         public string channel { get; set; }
 
-        [JsonPropertyName("data.data")]
-        public T data { get; set; }
+        public DataWrapper<T> data { get; set; }
     }
 }

@@ -16,8 +16,8 @@ namespace CSGORUN_Robot.Tests
         public void Serialize()
         {
             var settings = new Settings.Settings();
-            settings.Accounts = new System.Collections.ObjectModel.ObservableCollection<Account>();
-            settings.Accounts.Add(
+            settings.CSGORUN.Accounts = new List<Account>();
+            settings.CSGORUN.Accounts.Add(
                 new Account()
                 {
                     AuthToken = "none",
@@ -29,7 +29,7 @@ namespace CSGORUN_Robot.Tests
                     }
                 });
 
-            settings.Accounts.Add(
+            settings.CSGORUN.Accounts.Add(
                 new Account()
                 {
                     AuthToken = "none2",

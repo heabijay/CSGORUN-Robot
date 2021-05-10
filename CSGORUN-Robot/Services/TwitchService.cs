@@ -1,12 +1,9 @@
-﻿using CSGORUN_Robot.Settings;
-using CSGORUN_Robot.Twitch.DTOs;
+﻿using CSGORUN_Robot.Twitch.DTOs;
 using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net.WebSockets;
-using System.Runtime.Serialization;
-using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using Websocket.Client;
@@ -63,7 +60,7 @@ namespace CSGORUN_Robot.Services
 
         private void OnDisconnect(DisconnectionInfo disc)
         {
-            log.LogInformation("Disconnected due {0}", disc.Type);
+            log.LogInformation("[WS-T] Disconnected due {0}", disc.Type);
 
             if (disc.Type == DisconnectionType.ByServer)
             {
@@ -82,7 +79,7 @@ namespace CSGORUN_Robot.Services
                 ws.Send("JOIN #" + channel);
             }
 
-            log.LogInformation("Connected: {0}", recon.Type);
+            log.LogInformation("[WS-T] Connected: {0}", recon.Type);
         }
 
         private void OnMessage(ResponseMessage m)

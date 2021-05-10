@@ -2,17 +2,11 @@
 
 namespace CSGORUN_Robot.CSGORUN.WebSocket_DTOs
 {
-    public partial class SuccessResponse
+    public class ChatData
     {
-        public partial class Result<T>
-        {
-            public class ChatData
-            {
-                public string a { get; set; }
+        public string a { get; set; }
 
-                [JsonPropertyName("p")]
-                public ChatPayload payload { get; set; }
-            }
-        }
+        [JsonPropertyName("p")]
+        public ChatPayload payload { get; set; }
     }
 }
