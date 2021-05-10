@@ -1,4 +1,5 @@
 ﻿using CSGORUN_Robot.Client;
+using CSGORUN_Robot.CSGORUN.CustomEventArgs;
 using CSGORUN_Robot.Exceptions;
 using CSGORUN_Robot.Services;
 using Microsoft.Extensions.Logging;
@@ -13,7 +14,7 @@ namespace CSGORUN_Robot
 {
     public class Worker
     {
-        private ILogger log;
+        private readonly ILogger log;
         public List<ClientWorker> Clients { get; private set; }
         public List<IParserService> Parsers { get; private set; } = new List<IParserService>();
 
@@ -26,6 +27,7 @@ namespace CSGORUN_Robot
             Parsers.Add(csgorun);
 
             Parsers.ForEach(t => t.MessageReceived += OnMessageAsync);
+            csgorun.GameStarted += OnGameStarted;
         }
 
         public bool TokenTest()
@@ -44,8 +46,8 @@ namespace CSGORUN_Robot
                 catch (HttpRequestRawException ex)
                 {
                     isSuccess = false;
-                    var innerEx = ex.InnerException as HttpRequestException;
-                    log.LogError("[{0}#{1}] {2} - {3}", nameof(TokenTest), i, (int)innerEx?.StatusCode, innerEx?.StatusCode);
+                    var inner = ex.InnerException;
+                    log.LogError("[{0}#{1}] {2} - {3}", nameof(TokenTest), i, (int)inner?.StatusCode, inner?.StatusCode);
                 }
             });
 
@@ -64,7 +66,19 @@ namespace CSGORUN_Robot
 
         private async void OnMessageAsync(object sender, object data)
         {
-            
+            //if (sender.GetType() == typeof(CsgorunService))
+            //{
+            //    var d = (CsgorunMessageEventArgs)data;
+            //    if (d.Chat == CSGORUN.WebSocket_DTOs.SubscriptionType.game)
+            //    {
+            //        d.
+            //    }
+            //}
+        }
+
+        private void OnGameStarted(object sender, EventArgs e)
+        {
+            log.LogInformation("Game Started!");
         }
     }
 }

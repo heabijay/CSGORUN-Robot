@@ -16,8 +16,8 @@ namespace CSGORUN_Robot.Tests
         public void Serialize()
         {
             var settings = new Settings.Settings();
-            settings.CSGORUN.Accounts = new List<Account>();
-            settings.CSGORUN.Accounts.Add(
+            settings.CSGORUN.Accounts = new List<Account>
+            {
                 new Account()
                 {
                     AuthToken = "none",
@@ -27,13 +27,13 @@ namespace CSGORUN_Robot.Tests
                         Host = "address@gmail.com",
                         Port = 80
                     }
-                });
+                },
 
-            settings.CSGORUN.Accounts.Add(
                 new Account()
                 {
                     AuthToken = "none2",
-                });
+                }
+            };
 
 
             File.WriteAllText("settings.json", JsonSerializer.Serialize(settings, new JsonSerializerOptions() { WriteIndented = true })) ;

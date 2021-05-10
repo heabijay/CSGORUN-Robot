@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace CSGORUN_Robot.Exceptions
+namespace CSGORUN_Robot.Settings.Exceptions
 {
 
     [Serializable]

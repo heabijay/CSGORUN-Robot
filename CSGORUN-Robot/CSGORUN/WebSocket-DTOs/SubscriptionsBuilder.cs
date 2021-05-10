@@ -10,7 +10,7 @@ namespace CSGORUN_Robot.CSGORUN.WebSocket_DTOs
 
         public int? UserId { get; set; } = null;
 
-        private List<Subscription> subscriptions = new List<Subscription>();
+        private List<Subscription> subscriptions = new();
 
         private static readonly SubscriptionType[] typesRequiresUserId =
         {
@@ -64,7 +64,7 @@ namespace CSGORUN_Robot.CSGORUN.WebSocket_DTOs
         }
 
 
-        public static SubscriptionsBuilder Create() => new SubscriptionsBuilder();
+        public static SubscriptionsBuilder Create() => new();
 
         public static SubscriptionsBuilder FromList(List<Subscription> subscriptions)
         {

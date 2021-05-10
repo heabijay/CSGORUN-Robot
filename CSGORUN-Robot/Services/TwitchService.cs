@@ -111,9 +111,9 @@ namespace CSGORUN_Robot.Services
             }
         }
 
-        private UserMessage ParseMessage(string message)
+        private static UserMessage ParseMessage(string message)
         {
-            Dictionary<string, string> data = new Dictionary<string, string>();
+            Dictionary<string, string> data = new();
             string[] dataraw = message.Split(new char[] { ';' }, StringSplitOptions.RemoveEmptyEntries);
             for (int i = 0; i < dataraw.Length; i++)
             {
@@ -121,14 +121,14 @@ namespace CSGORUN_Robot.Services
                 {
                     int IndexEq = dataraw[i].IndexOf('=');
                     string Key = dataraw[i].Substring(0, IndexEq);
-                    string Value = dataraw[i].Substring(IndexEq + 1);
+                    string Value = dataraw[i][(IndexEq + 1)..];
 
                     switch (Key)
                     {
                         case "user-type":
-                            Value = Value.Substring(Value.IndexOf("PRIVMSG") + 9);
+                            Value = Value[(Value.IndexOf("PRIVMSG") + 9)..];
                             string dataChannel = Value.Substring(0, Value.IndexOf(' '));
-                            string dataMessage = Value.Substring(Value.IndexOf(':') + 1);
+                            string dataMessage = Value[(Value.IndexOf(':') + 1)..];
 
                             data.Add("channel", dataChannel);
                             data.Add("message", dataMessage.Trim());

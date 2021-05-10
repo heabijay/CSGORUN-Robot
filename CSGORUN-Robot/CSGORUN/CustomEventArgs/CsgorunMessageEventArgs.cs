@@ -1,7 +1,7 @@
 ﻿using CSGORUN_Robot.CSGORUN.WebSocket_DTOs;
 using System;
 
-namespace CSGORUN_Robot.CustomEventArgs
+namespace CSGORUN_Robot.CSGORUN.CustomEventArgs
 {
     public class CsgorunMessageEventArgs : EventArgs
     {

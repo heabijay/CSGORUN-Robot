@@ -7,6 +7,8 @@ namespace CSGORUN_Robot.Exceptions
     [Serializable]
     public class HttpRequestRawException : Exception
     {
+        public new HttpRequestException InnerException => (HttpRequestException)base.InnerException;
+
         public HttpContent Content { get; set; }
         public HttpRequestRawException() { }
         public HttpRequestRawException(string message) : base(message) { }

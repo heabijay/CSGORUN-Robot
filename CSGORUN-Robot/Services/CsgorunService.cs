@@ -1,6 +1,6 @@
 ﻿using CSGORUN_Robot.Client;
+using CSGORUN_Robot.CSGORUN.CustomEventArgs;
 using CSGORUN_Robot.CSGORUN.WebSocket_DTOs;
-using CSGORUN_Robot.CustomEventArgs;
 using CSGORUN_Robot.Exceptions;
 using Microsoft.Extensions.Logging;
 using System;
@@ -19,16 +19,16 @@ namespace CSGORUN_Robot.Services
 {
     public class CsgorunService : IParserService
     {
-        private string subscriptionsStr;
+        private readonly string subscriptionsStr;
 
-        private ILogger log;
+        private readonly ILogger log;
 
-        private ClientWorker clientWorker;
+        private readonly ClientWorker clientWorker;
 
         public bool IsActive => ws != null && ws.IsRunning;
 
         private static Timer timer = null;
-        private WebsocketClient ws = null;
+        private readonly WebsocketClient ws = null;
 
         public event EventHandler<object> MessageReceived;
         public event EventHandler GameStarted;
@@ -122,7 +122,7 @@ namespace CSGORUN_Robot.Services
                                 await clientWorker.HttpService.GetCurrentStateAsync();
                                 break;
                             }
-                            catch (HttpRequestRawException ex) when ((ex.InnerException as HttpRequestException).StatusCode == HttpStatusCode.Unauthorized)
+                            catch (HttpRequestRawException ex) when (ex.InnerException.StatusCode == HttpStatusCode.Unauthorized)
                             {
                                 log.LogCritical("[WS] CurrentState request returns unauthorized!");
                                 return;
@@ -146,7 +146,7 @@ namespace CSGORUN_Robot.Services
 
                     try
                     {
-                        var data = JsonSerializer.Deserialize<SuccessResponse<object>>(dataRaw);
+                        var data = JsonSerializer.Deserialize<SuccessResponse<JsonDocument>>(dataRaw);
 
                         var channel = SubscriptionTypeExtensions.Parse(data.result.channel);
 
@@ -160,13 +160,13 @@ namespace CSGORUN_Robot.Services
                         }
                         else if (channel is SubscriptionType.game)
                         {
-                            var type = ((JsonElement)data.result.data.data).GetProperty("type").GetString();
+                            var type = data.result.data.data.RootElement.GetProperty("type").GetString();
                             if (type.Equals("start", StringComparison.OrdinalIgnoreCase))
                                 GameStarted?.Invoke(this, new EventArgs());
 
                         }
                     }
-                    catch (Exception ex)
+                    catch
                     {
                         //log.LogWarning(ex, "[WS] Something went wrong while parsing the message.");
                     }

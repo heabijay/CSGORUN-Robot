@@ -9,5 +9,7 @@ namespace CSGORUN_Robot.Settings
         public int PrimaryAccountIndex { get; set; }
 
         public RegexPatterns RegexPatterns { get; set; }
+
+        public bool AutoPlaceBet { get; set; }
     }
 }
