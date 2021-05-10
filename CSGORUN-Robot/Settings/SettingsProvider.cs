@@ -1,5 +1,7 @@
 ﻿using CSGORUN_Robot.Exceptions;
 using CSGORUN_Robot.Extensions;
+using Microsoft.Extensions.DependencyInjection;
+using Serilog;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
@@ -16,6 +18,7 @@ namespace CSGORUN_Robot.Settings
         private readonly static string SettingsPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "settings.json");
         private static Settings _Current { get; set; }
 
+        private static ILogger logger => Log.ForContext(typeof(SettingsProvider));
         public static Settings Provide()
         {
             if (_Current == null)
@@ -28,16 +31,34 @@ namespace CSGORUN_Robot.Settings
         {
             if (_Current == null)
             {
-                if (!File.Exists(SettingsPath))
+                try
                 {
                     using (StreamWriter sw = new(Path.Combine(Path.GetDirectoryName(SettingsPath), "settings.example.json")))
                         await JsonSerializer.SerializeAsync(sw.BaseStream, SettingsExample, new JsonSerializerOptions() { WriteIndented = true });
-
-                    throw new SettingsFileNotExistException("Settings file 'settings.json' not exist. Check an example file 'settings.example.json' and make your own settings file.");
+                }
+                catch (Exception ex)
+                {
+                    logger.Warning("Exception while creating/updating 'settings.example.json': {0}", ex);
                 }
 
-                using (StreamReader sr = new(SettingsPath))
-                    _Current = await JsonSerializer.DeserializeAsync<Settings>(sr.BaseStream);
+                if (!File.Exists(SettingsPath))
+                {
+                    var ex = new SettingsFileNotExistException("Settings file 'settings.json' not exist. Check an example file 'settings.example.json' and make your own settings file.");
+                    logger.Error("Settings file 'settings.json' not found: {0}. Details", ex);
+                    throw ex;
+                }
+
+                try
+                {
+                    using (StreamReader sr = new(SettingsPath))
+                        _Current = await JsonSerializer.DeserializeAsync<Settings>(sr.BaseStream);
+                }
+                catch (Exception e)
+                {
+                    var ex = new SettingsFileInvalidException("Settings file 'settings.json' parse has been failed. Please, check correction with example file 'settings.example.json'.", e);
+                    logger.Error("Settings file 'settings.json' scheme is invalid. Details: {0}", ex);
+                    throw ex;
+                }
             }
 
             return _Current;

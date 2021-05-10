@@ -4,10 +4,10 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace CSGORUN_Robot.CSGORUN.DTOs
+namespace CSGORUN_Robot.CSGORUN.WebSocket_DTOs
 {
-    public class Notification
+    public class SubscriptionParams
     {
-
+        public string channel { get; set; }
     }
 }

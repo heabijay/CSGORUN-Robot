@@ -6,10 +6,9 @@ using System.Threading.Tasks;
 
 namespace CSGORUN_Robot.CSGORUN.DTOs
 {
-    public class Sticker
+    public class PlaceBet
     {
-        public int id { get; set; }
-        public object name { get; set; }
-        public string url { get; set; }
+        public List<int> userItemIds { get; set; }
+        public double auto { get; set; }
     }
 }

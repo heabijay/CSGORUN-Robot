@@ -1,12 +1,9 @@
-﻿using CSGORUN_Robot.CSGORUN.Dtos;
+﻿using CSGORUN_Robot.CSGORUN.DTOs;
 using CSGORUN_Robot.Extensions;
-using CSGORUN_Robot.Settings;
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Net;
 using System.Net.Http;
-using System.Text;
 using System.Text.Json;
 using System.Threading.Tasks;
 
@@ -35,7 +32,7 @@ namespace CSGORUN_Robot.Services
                     Proxy = proxy,
                 }).SetCSGORUNHttpHeaders();
 
-            UpdateToken(old.DefaultRequestHeaders.Authorization.Parameter);
+            UpdateToken(old?.DefaultRequestHeaders?.Authorization?.Parameter);
 
             old?.Dispose();
         }
@@ -45,23 +42,27 @@ namespace CSGORUN_Robot.Services
             httpClient.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("JWT", authToken);
         }
 
+        protected async Task InvokeRequestAsync(HttpRequestMessage req) => await InvokeRequestAsync<object>(req);
+        protected async Task<T> InvokeRequestAsync<T>(HttpRequestMessage req) where T : new()
+        {
+            var result = await httpClient.SendAsync(req);
+            result.EnsureSuccessStatusCodeRaw();
+            var content = await result.Content.ReadAsStreamAsync();
+            var resp = await JsonSerializer.DeserializeAsync<SuccessResponse<T>>(content);
+            return resp.data;
+        }
+
 
         public async Task<CurrentState> GetCurrentStateAsync()
         {
             var req = new HttpRequestMessage(HttpMethod.Get, new Uri(CSGORUN.Routing.CurrentState))
             {
-                Headers =
-                {
-                    { HttpRequestHeader.Referer.ToString(), CSGORUN.Routing.HomeEndpoint }
-                },
+
             };
 
-            var result = await httpClient.SendAsync(req);
-            result.EnsureSuccessStatusCodeRaw();
-            var content = await result.Content.ReadAsStreamAsync();
-            var resp = await JsonSerializer.DeserializeAsync<SuccessResponse<CurrentState>>(content);
-            LastCurrentState = resp.data;
-            return resp.data;
+            var resp = await InvokeRequestAsync<CurrentState>(req);
+            LastCurrentState = resp;
+            return resp;
         }
 
         public async Task PostActivatePromoAsync(string promo)
@@ -77,11 +78,52 @@ namespace CSGORUN_Robot.Services
                 Content = new StringContent(JsonSerializer.Serialize(data), null, "application/json;charset=UTF-8")
             };
 
-            var result = await httpClient.SendAsync(req);
-            result.EnsureSuccessStatusCodeRaw();
-            var content = await result.Content.ReadAsStreamAsync();
-            var balance = await JsonSerializer.DeserializeAsync<BalanceUpdate>(content);
+            var balance = await InvokeRequestAsync<BalanceUpdate>(req);
             LastCurrentState.user.balance = balance.balance + balance.added ?? 0;
+        }
+
+        public async Task<List<List<object>>> GetMarketItemsAsync()
+        {
+            var req = new HttpRequestMessage(HttpMethod.Get, new Uri(CSGORUN.Routing.MarketItems))
+            {
+
+            };
+
+            return await InvokeRequestAsync<List<List<object>>>(req);
+        }
+
+        public async Task<int> PostBuyItemAsync(int itemId)
+        {
+            var data = new ItemsNeedExchange()
+            {
+                userItemIds = new(),
+                wishItemIds = new(itemId)
+            };
+
+            var req = new HttpRequestMessage(HttpMethod.Post, new Uri(CSGORUN.Routing.ExchangeItems))
+            {
+                Content = new StringContent(JsonSerializer.Serialize(data), null, "application/json;charset=UTF-8")
+            };
+
+            var resp = await InvokeRequestAsync<ItemsExchange>(req);
+            LastCurrentState.user.balance = resp.balance;
+            return resp.userItems.newItems[0].id;
+        }
+
+        public async Task PostMakeBetAsync(int itemId, double autoCoefficient)
+        {
+            var data = new PlaceBet()
+            {
+                userItemIds = new(itemId),
+                auto = autoCoefficient
+            };
+
+            var req = new HttpRequestMessage(HttpMethod.Post, new Uri(CSGORUN.Routing.MakeBet))
+            {
+                Content = new StringContent(JsonSerializer.Serialize(data), null, "application/json;charset=UTF-8")
+            };
+
+            await InvokeRequestAsync(req);
         }
     }
 }

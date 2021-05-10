@@ -2,6 +2,11 @@
 using CSGORUN_Robot.Extensions;
 using CSGORUN_Robot.Services;
 using CSGORUN_Robot.Settings;
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Logging;
+using Serilog;
 using System;
 using System.IO;
 using System.Net.Http;
@@ -16,13 +21,36 @@ namespace CSGORUN_Robot
     {
         static void Main(string[] args)
         {
-            Directory.SetCurrentDirectory(AppDomain.CurrentDomain.BaseDirectory);
-
             if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
                 Console.OutputEncoding = Encoding.Unicode;
 
+            Log.Logger = new LoggerConfiguration()
+                .MinimumLevel.Debug()
+                .Enrich.FromLogContext()
+                .WriteTo.Console()
+                .WriteTo.File(
+                    path: Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "CSGORUN-Robot.log"),
+                    restrictedToMinimumLevel: Serilog.Events.LogEventLevel.Warning, 
+                    fileSizeLimitBytes: 25000000)
+                .CreateLogger();
 
-            var settings = SettingsProvider.Provide();
+            var host = Host.CreateDefaultBuilder()
+                .ConfigureServices((context, services) =>
+                {
+                    services.AddSingleton(services => SettingsProvider.Provide());
+                    services.AddSingleton<TwitchService>();
+                    services.AddSingleton<Worker>();
+                })
+                .UseSerilog()
+                .Build();
+
+            var svc = ActivatorUtilities.CreateInstance<Worker>(host.Services);
+            svc.TokenTestAsync().GetAwaiter().GetResult();
+
+            //Directory.SetCurrentDirectory(AppDomain.CurrentDomain.BaseDirectory);
+
+
+            //var settings = SettingsProvider.Provide();
             new ManualResetEvent(false).WaitOne();
 
             //var client = new Client.Client(settings.CSGORUN.Accounts[settings.CSGORUN.PrimaryAccountId ?? 0]);

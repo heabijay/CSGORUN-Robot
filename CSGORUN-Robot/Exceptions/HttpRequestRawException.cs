@@ -9,7 +9,7 @@ namespace CSGORUN_Robot.Exceptions
 {
 
     [Serializable]
-    public class HttpRequestRawException : HttpRequestException
+    public class HttpRequestRawException : Exception
     {
         public HttpContent Content { get; set; }
         public HttpRequestRawException() { }

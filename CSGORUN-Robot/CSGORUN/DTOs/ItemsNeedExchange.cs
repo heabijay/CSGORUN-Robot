@@ -6,10 +6,9 @@ using System.Threading.Tasks;
 
 namespace CSGORUN_Robot.CSGORUN.DTOs
 {
-    public class Sticker
+    public class ItemsNeedExchange
     {
-        public int id { get; set; }
-        public object name { get; set; }
-        public string url { get; set; }
+        public List<int> userItemIds { get; set; }
+        public List<int> wishItemIds { get; set; }
     }
 }

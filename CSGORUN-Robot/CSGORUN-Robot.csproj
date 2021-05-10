@@ -8,10 +8,11 @@
 
   <ItemGroup>
     <PackageReference Include="HttpToSocks5Proxy" Version="1.4.0" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <Folder Include="CSGORUN\WebSocket-Dtos\" />
+    <PackageReference Include="Microsoft.Extensions.Hosting" Version="5.0.0" />
+    <PackageReference Include="Serilog.Extensions.Hosting" Version="4.1.2" />
+    <PackageReference Include="Serilog.Sinks.Console" Version="3.1.1" />
+    <PackageReference Include="Serilog.Sinks.File" Version="4.1.0" />
+    <PackageReference Include="Websocket.Client" Version="4.3.30" />
   </ItemGroup>
 
 </Project>
