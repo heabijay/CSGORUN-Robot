@@ -60,16 +60,16 @@ namespace CSGORUN_Robot.Settings
         }
 
 
-        private static Settings SettingsExample => new()
+        private static Settings SettingsExample => new Settings()
         {
-            CSGORUN =
+            CSGORUN = new()
             {
-                Accounts =
+                Accounts = new()
                 {
                     new()
                     {
                         AuthToken = "eyJhbGciOiJIUzI1NiIsInAccount.With.HTTPProxy",
-                        Proxy =
+                        Proxy = new()
                         {
                             Host = "Proxy.host.com",
                             Port = 80,
@@ -81,7 +81,7 @@ namespace CSGORUN_Robot.Settings
                     new()
                     {
                         AuthToken = "eyJhbGciOiJIUzI1NiIsInAccount.With.SOCKS5Proxy",
-                        Proxy =
+                        Proxy = new()
                         {
                             Host = "Proxy.host.com",
                             Port = 80,
@@ -95,7 +95,7 @@ namespace CSGORUN_Robot.Settings
                         AuthToken = "eyJhbGciOiJIUzI1NiIsInAccount.Without.Proxy"
                     }
                 },
-                RegexPatterns =
+                RegexPatterns = new()
                 {
                     Default = "Pattern Default. Dont forget about bypass quatation mark using escape char.",
                     EN_Admins = "Pattern for english chat admins. Dont forget about bypass quatation mark using escape char.",
@@ -104,16 +104,17 @@ namespace CSGORUN_Robot.Settings
                 AutoPlaceBet = false,
                 PrimaryAccountIndex = 0
             },
-            Twitch =
+            Twitch = new()
             {
                 Channels = "xQcOW, StRoGo",
                 RegexPattern = "Pattern for channel owner messages. Dont forget about bypass quatation mark using escape char."
             },
-            Telegram =
+            Telegram = new()
             {
-                Notifications =
+                Notifications = new()
                 {
-                    Bot_Token = "myBot:Token"
+                    BotToken = "1234567890:AAAaaAAaa_AaAAaa-AAaAAAaAAaAaAaAAAA",
+                    OwnerId = 0
                 }
             }
         };

@@ -2,6 +2,7 @@
 {
     public class TelegramNotifications
     {
-        public string Bot_Token { get; set; }
+        public string BotToken { get; set; }
+        public int OwnerId { get; set; }
     }
 }

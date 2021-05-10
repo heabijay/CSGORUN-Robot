@@ -148,22 +148,25 @@ namespace CSGORUN_Robot.Services
                     {
                         var data = JsonSerializer.Deserialize<SuccessResponse<JsonDocument>>(dataRaw);
 
-                        var channel = SubscriptionTypeExtensions.Parse(data.result.channel);
-
-                        if (channel is (SubscriptionType.c_ru or SubscriptionType.c_en))
+                        if (data?.result?.channel != null)
                         {
-                            var msg = JsonSerializer.Deserialize<ChatData>(data.result.data.data.ToString()).payload;
+                            var channel = SubscriptionTypeExtensions.Parse(data.result.channel);
 
-                            log.LogDebug("[{0}] {1}: {2}", data.result.channel, msg?.user?.nickname, msg?.message);
+                            if (channel is (SubscriptionType.c_ru or SubscriptionType.c_en))
+                            {
+                                var msg = JsonSerializer.Deserialize<ChatData>(data.result.data.data.RootElement.ToString()).payload;
 
-                            MessageReceived?.Invoke(this, new CsgorunMessageEventArgs(channel, msg));
-                        }
-                        else if (channel is SubscriptionType.game)
-                        {
-                            var type = data.result.data.data.RootElement.GetProperty("type").GetString();
-                            if (type.Equals("start", StringComparison.OrdinalIgnoreCase))
-                                GameStarted?.Invoke(this, new EventArgs());
+                                log.LogDebug("[{0}] {1}: {2}", data.result.channel, msg?.user?.nickname, msg?.message);
 
+                                MessageReceived?.Invoke(this, new CsgorunMessageEventArgs(channel, msg));
+                            }
+                            else if (channel is SubscriptionType.game)
+                            {
+                                var type = data.result.data.data.RootElement.GetProperty("type").GetString();
+                                if (type.Equals("start", StringComparison.OrdinalIgnoreCase))
+                                    GameStarted?.Invoke(this, new EventArgs());
+
+                            }
                         }
                     }
                     catch

@@ -1,9 +1,6 @@
 ﻿using CSGORUN_Robot.Client;
-using CSGORUN_Robot.Exceptions;
-using CSGORUN_Robot.Extensions;
 using CSGORUN_Robot.Services;
 using CSGORUN_Robot.Settings;
-using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
@@ -27,15 +24,25 @@ namespace CSGORUN_Robot
             if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
                 Console.OutputEncoding = Encoding.Unicode;
 
-            Log.Logger = new LoggerConfiguration()
+            var settings = SettingsProvider.Provide();
+
+            var loggerConfig = new LoggerConfiguration()
                 .MinimumLevel.Debug()
                 .Enrich.FromLogContext()
                 .WriteTo.Console()
                 .WriteTo.File(
                     path: Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "CSGORUN-Robot.log"),
-                    restrictedToMinimumLevel: Serilog.Events.LogEventLevel.Warning, 
-                    fileSizeLimitBytes: 25000000)
-                .CreateLogger();
+                    restrictedToMinimumLevel: Serilog.Events.LogEventLevel.Warning,
+                    fileSizeLimitBytes: 25000000);
+
+            if (settings?.Telegram?.Notifications?.BotToken != null &&
+                settings?.Telegram?.Notifications?.OwnerId != null)
+                loggerConfig = loggerConfig.WriteTo.Telegram(
+                        botToken: settings?.Telegram?.Notifications?.BotToken,
+                        chatId: settings?.Telegram?.Notifications?.OwnerId.ToString(),
+                        restrictedToMinimumLevel: Serilog.Events.LogEventLevel.Error);
+
+            Log.Logger = loggerConfig.CreateLogger();
 
             var host = Host.CreateDefaultBuilder()
                 .ConfigureServices((context, services) =>
@@ -50,9 +57,12 @@ namespace CSGORUN_Robot
                     });
                     services.AddSingleton<Worker>();
                 })
-                .UseSerilog()
+                .ConfigureLogging(builder =>
+                {
+                    builder.ClearProviders();
+                    builder.AddSerilog();
+                })
                 .Build();
-
 
             var log = Log.Logger.ForContext<Program>();
 
