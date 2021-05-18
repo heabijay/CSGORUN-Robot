@@ -1,6 +1,6 @@
 ﻿namespace CSGORUN_Robot.Settings
 {
-    public class Settings
+    public class AppSettings
     {
         public CSGORUN CSGORUN { get; set; }
         public Twitch Twitch { get; set; }

@@ -15,7 +15,7 @@ namespace CSGORUN_Robot.Tests
         [TestMethod]
         public void Serialize()
         {
-            var settings = new Settings.Settings();
+            var settings = new Settings.AppSettings();
             settings.CSGORUN.Accounts = new List<Account>
             {
                 new Account()
@@ -34,7 +34,6 @@ namespace CSGORUN_Robot.Tests
                     AuthToken = "none2",
                 }
             };
-
 
             File.WriteAllText("settings.json", JsonSerializer.Serialize(settings, new JsonSerializerOptions() { WriteIndented = true })) ;
         }

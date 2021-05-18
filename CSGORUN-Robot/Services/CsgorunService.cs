@@ -2,6 +2,7 @@
 using CSGORUN_Robot.CSGORUN.CustomEventArgs;
 using CSGORUN_Robot.CSGORUN.WebSocket_DTOs;
 using CSGORUN_Robot.Exceptions;
+using CSGORUN_Robot.Settings;
 using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
@@ -33,7 +34,7 @@ namespace CSGORUN_Robot.Services
         public event EventHandler<object> MessageReceived;
         public event EventHandler GameStarted;
 
-        public CsgorunService(ILogger<CsgorunService> logger, Settings.Settings settings, List<ClientWorker> clientWorkers)
+        public CsgorunService(ILogger<CsgorunService> logger, AppSettings settings, List<ClientWorker> clientWorkers)
         {
             log = logger;
             clientWorker = clientWorkers[settings.CSGORUN.PrimaryAccountIndex];

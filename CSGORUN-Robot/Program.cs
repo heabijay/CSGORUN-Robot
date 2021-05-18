@@ -5,6 +5,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Serilog;
+using Serilog.Sinks.Telegram;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -19,13 +20,63 @@ namespace CSGORUN_Robot
 {
     class Program
     {
+        public static IServiceProvider ServiceProvider;
         static void Main(string[] args)
         {
             if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
                 Console.OutputEncoding = Encoding.Unicode;
 
-            var settings = SettingsProvider.Provide();
+            var host = CreateHostBuilder(args).Build();
+            ServiceProvider = host.Services;
+            var log = Log.Logger.ForContext<Program>();
 
+            log.Information("Welcome to CSGORUN-Robot!");
+
+            var svc = ActivatorUtilities.CreateInstance<Worker>(host.Services);
+            if (!svc.TokenTest())
+            {
+                log.Fatal("Please, rewrite your tokens to be correct!");
+                return;
+            }
+            svc.StartParse();
+
+            new ManualResetEvent(false).WaitOne();
+        }
+
+        public static IHostBuilder CreateHostBuilder(string[] args) =>
+            Host.CreateDefaultBuilder(args)
+                .ConfigureServices(ConfigureServices)
+                .ConfigureLogging(ConfigureLogging);
+
+
+        public static void ConfigureServices(IServiceCollection services)
+        {
+            services.AddSingleton(services => AppSettingsProvider.Provide());
+            services.AddSingleton(services => 
+            {
+                var settings = services.GetService<AppSettings>();
+                return new TelegramBotService(
+                    services.GetService<ILogger<TelegramBotService>>(),
+                    settings.Telegram.Notifications.BotToken,
+                    settings.Telegram.Notifications.OwnerId);
+            });
+            services.AddSingleton<TwitchService>();
+            services.AddSingleton<CsgorunService>();
+            services.AddSingleton<List<ClientWorker>>(services =>
+            {
+                var settings = services.GetService<AppSettings>();
+                return settings.CSGORUN.Accounts.Select(t => new ClientWorker(t)).ToList();
+            });
+            services.AddSingleton<Worker>();
+        }
+
+        public static void ConfigureLogging(ILoggingBuilder builder)
+        {
+            builder.ClearProviders();
+            builder.AddSerilog();
+
+            // Semilog configuration
+            var settings = AppSettingsProvider.Provide();
             var loggerConfig = new LoggerConfiguration()
                 .MinimumLevel.Debug()
                 .Enrich.FromLogContext()
@@ -43,59 +94,6 @@ namespace CSGORUN_Robot
                         restrictedToMinimumLevel: Serilog.Events.LogEventLevel.Error);
 
             Log.Logger = loggerConfig.CreateLogger();
-
-            var host = Host.CreateDefaultBuilder()
-                .ConfigureServices((context, services) =>
-                {
-                    services.AddSingleton(services => SettingsProvider.Provide());
-                    services.AddSingleton<TwitchService>();
-                    services.AddSingleton<CsgorunService>();
-                    services.AddSingleton<List<ClientWorker>>(t =>
-                    {
-                        var settings = t.GetService<Settings.Settings>();
-                        return settings.CSGORUN.Accounts.Select(t => new ClientWorker(t)).ToList();
-                    });
-                    services.AddSingleton<Worker>();
-                })
-                .ConfigureLogging(builder =>
-                {
-                    builder.ClearProviders();
-                    builder.AddSerilog();
-                })
-                .Build();
-
-            var log = Log.Logger.ForContext<Program>();
-
-            log.Information("Welcome to CSGORUN-Robot!");
-
-            var svc = ActivatorUtilities.CreateInstance<Worker>(host.Services);
-            if (!svc.TokenTest())
-            {
-                log.Fatal("Please, rewrite your tokens to be correct!");
-                return;
-            }
-
-            svc.StartParse();
-
-            
-
-            //Directory.SetCurrentDirectory(AppDomain.CurrentDomain.BaseDirectory);
-
-
-            //var settings = SettingsProvider.Provide();
-            new ManualResetEvent(false).WaitOne();
-
-            //var client = new Client.Client(settings.CSGORUN.Accounts[settings.CSGORUN.PrimaryAccountId ?? 0]);
-            //try
-            //{
-            //    var resp = client.httpService.GetCurrentStateAsync().GetAwaiter().GetResult();
-            //    Console.WriteLine(JsonSerializer.Serialize(resp, new JsonSerializerOptions() { WriteIndented = true }));
-            //}
-            //catch (HttpRequestRawException ex)
-            //{
-            //    var str = ex.Content.ReadAsStringAsync().GetAwaiter().GetResult();
-            //    Console.WriteLine("Error with content: " + str);
-            //}
         }
     }
 }

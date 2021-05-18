@@ -2,6 +2,7 @@
 using CSGORUN_Robot.CSGORUN.CustomEventArgs;
 using CSGORUN_Robot.Exceptions;
 using CSGORUN_Robot.Services;
+using CSGORUN_Robot.Settings;
 using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
@@ -15,12 +16,16 @@ namespace CSGORUN_Robot
     public class Worker
     {
         private readonly ILogger log;
+        private readonly Settings.AppSettings settings;
+        private readonly TelegramBotService _telegramBotService;
         public List<ClientWorker> Clients { get; private set; }
         public List<IParserService> Parsers { get; private set; } = new List<IParserService>();
 
-        public Worker(ILogger<Worker> logger, Settings.Settings settings, TwitchService twitch, CsgorunService csgorun, List<ClientWorker> clientWorkers)
+        public Worker(ILogger<Worker> logger, AppSettings settings, TelegramBotService telegramBotService, TwitchService twitch, CsgorunService csgorun, List<ClientWorker> clientWorkers)
         {
             log = logger;
+            this.settings = settings;
+            _telegramBotService = telegramBotService;
 
             Clients = clientWorkers;
             Parsers.Add(twitch);
@@ -66,19 +71,21 @@ namespace CSGORUN_Robot
 
         private async void OnMessageAsync(object sender, object data)
         {
+
+            //string pattern = null;
+            //string message = null;
+
             //if (sender.GetType() == typeof(CsgorunService))
             //{
             //    var d = (CsgorunMessageEventArgs)data;
-            //    if (d.Chat == CSGORUN.WebSocket_DTOs.SubscriptionType.game)
-            //    {
-            //        d.
-            //    }
+            //    message = d.Message.message;
+            //    if (d.Chat == CSGORUN.WebSocket_DTOs.SubscriptionType.c_en) pattern = settings.CSGORUN. 
             //}
         }
 
         private void OnGameStarted(object sender, EventArgs e)
         {
-            log.LogInformation("Game Started!");
+            
         }
     }
 }

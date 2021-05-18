@@ -8,13 +8,13 @@ using System.Threading.Tasks;
 
 namespace CSGORUN_Robot.Settings
 {
-    public static class SettingsProvider
+    public static class AppSettingsProvider
     {
         private readonly static string SettingsPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "settings.json");
-        private static Settings current { get; set; }
+        private static AppSettings current { get; set; }
 
-        private static ILogger logger => Log.ForContext(typeof(SettingsProvider));
-        public static Settings Provide()
+        private static ILogger logger => Log.ForContext(typeof(AppSettingsProvider));
+        public static AppSettings Provide()
         {
             if (current == null)
                 return ProvideAsync().GetAwaiter().GetResult();
@@ -22,7 +22,7 @@ namespace CSGORUN_Robot.Settings
             return current;
         }
 
-        public static async Task<Settings> ProvideAsync()
+        public static async Task<AppSettings> ProvideAsync()
         {
             if (current == null)
             {
@@ -46,7 +46,7 @@ namespace CSGORUN_Robot.Settings
                 try
                 {
                     using StreamReader sr = new(SettingsPath);
-                    current = await JsonSerializer.DeserializeAsync<Settings>(sr.BaseStream);
+                    current = await JsonSerializer.DeserializeAsync<AppSettings>(sr.BaseStream);
                 }
                 catch (Exception e)
                 {
@@ -60,7 +60,7 @@ namespace CSGORUN_Robot.Settings
         }
 
 
-        private static Settings SettingsExample => new Settings()
+        private static AppSettings SettingsExample => new AppSettings()
         {
             CSGORUN = new()
             {

@@ -1,4 +1,5 @@
-﻿using CSGORUN_Robot.Twitch.DTOs;
+﻿using CSGORUN_Robot.Settings;
+using CSGORUN_Robot.Twitch.DTOs;
 using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
@@ -24,7 +25,7 @@ namespace CSGORUN_Robot.Services
 
         private Timer timer = null;
 
-        public TwitchService(ILogger<TwitchService> logger, Settings.Settings settings)
+        public TwitchService(ILogger<TwitchService> logger, AppSettings settings)
         {
             log = logger;
             channels = settings?.Twitch?.Channels?.Split(',')?.Select(t => t.Trim().Trim('@', '#').ToLower())?.ToList();
