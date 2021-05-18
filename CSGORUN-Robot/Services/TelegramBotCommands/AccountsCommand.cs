@@ -39,8 +39,6 @@ namespace CSGORUN_Robot.Services.TelegramBotCommands
                     if (state.items?.Count > 0)
                         foreach (var item in state.items)
                             sb.AppendLine($"_| {item.name} ({item.price}$)_");
-
-                    sb.AppendLine($"Deposit: ${}");
                 }
 
                 sb.AppendLine();
