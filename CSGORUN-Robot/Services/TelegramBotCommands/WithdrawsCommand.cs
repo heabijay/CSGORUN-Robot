@@ -40,8 +40,8 @@ namespace CSGORUN_Robot.Services.TelegramBotCommands
 
                     await _bot.SendTextMessageAsync(
                         chatId: message.From.Id,
-                        text: $"*{client.HttpService.LastCurrentState.user.name}'s withdraws:*\n" +
-                            $"Withdraws: _{Math.Round(withdraws.Where(t => t.status == WithdrawStatus.WITHDRAWN).Sum(t => t.amount), 2)}$_\n" +
+                        text: $"*{client.HttpService.LastCurrentState.user.name}'s withdrawals:*\n" +
+                            $"Withdraw: _{Math.Round(withdraws.Where(t => t.status == WithdrawStatus.WITHDRAWN).Sum(t => t.amount), 2)}$_\n" +
                             $"Deposit: _{client.HttpService.LastCurrentState.user.deposit}$_",
                         parseMode: ParseMode.Markdown,
                         disableWebPagePreview: true
