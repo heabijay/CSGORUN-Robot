@@ -65,9 +65,9 @@ namespace CSGORUN_Robot.Services
                     var spaceIndex = msg.Text.IndexOf(' ');
                     string cmd;
                     if (spaceIndex < 0) cmd = msg.Text.Substring(1);
-                    else cmd = msg.Text.Substring(1, spaceIndex);
+                    else cmd = msg.Text.Substring(1, spaceIndex - 1);
 
-                    var handler = Commands.FirstOrDefault(t => t.Command?.Equals(cmd, System.StringComparison.OrdinalIgnoreCase) ?? false);
+                    var handler = Commands.FirstOrDefault(t => t.Command?.Equals(cmd, StringComparison.OrdinalIgnoreCase) ?? false);
                     if (handler != null)
                     {
                         await handler.ExecuteAsync(msg);

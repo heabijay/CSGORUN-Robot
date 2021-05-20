@@ -14,7 +14,7 @@ namespace CSGORUN_Robot.CSGORUN.DTOs
         public string avatar { get; set; }
         public double balance { get; set; }
         public object mutedAt { get; set; }
-        public int lang { get; set; }
+        public int? lang { get; set; }
         public int role { get; set; }
         public List<Item> items { get; set; }
         public List<Sticker> stickers { get; set; }

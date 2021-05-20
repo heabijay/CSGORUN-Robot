@@ -29,16 +29,17 @@ namespace CSGORUN_Robot.Services.TelegramBotCommands
             int i = 0;
             foreach (var client in worker.Clients)
             {
-                sb.AppendLine($"#{i}: `{client.Account.AuthToken}`");
+                sb.AppendLine($"#{i}: `*****{client.Account.AuthToken.Substring(client.Account.AuthToken.Length - 7)}`");
                 sb.AppendLine($"Proxy: `{client.Account.Proxy?.Host ?? "null"}`");
 
                 var state = client.HttpService.LastCurrentState?.user;
                 if (state != null)
                 {
-                    sb.AppendLine($"Data: _{state.name} ({state.balance}$)_");
+                    sb.AppendLine($"User: _{state.name} ({state.balance}$)_");
+                    sb.AppendLine($"[<CSGORUN>]({CSGORUN.Routing.HomeProfileEndpoint}/{state.steamId}) | [<Steam>](https://steamcommunity.com/profiles/{state.steamId})");
                     if (state.items?.Count > 0)
                         foreach (var item in state.items)
-                            sb.AppendLine($"_| {item.name} ({item.price}$)_");
+                            sb.AppendLine($"_|> {item.name} ({item.price}$)_");
                 }
 
                 sb.AppendLine();

@@ -6,7 +6,9 @@ using CSGORUN_Robot.Settings;
 using Serilog;
 using System;
 using System.Collections.Concurrent;
+using System.Collections.Generic;
 using System.Linq;
+using System.Text;
 using System.Text.Json;
 using System.Threading.Tasks;
 
@@ -154,6 +156,27 @@ namespace CSGORUN_Robot.Client
             }
 
             return item.Value;
+        }
+
+
+        public async Task<List<WithdrawItem>> GetWithdrawsAsync()
+        {
+            var delay = (await AppSettingsProvider.ProvideAsync()).CSGORUN.RequestsDelay;
+
+            var items = new List<WithdrawItem>();
+
+            var pages = 1;
+            for (int page = 1; page <= pages; page++)
+            {
+                if (page != 1) await Task.Delay(delay);
+
+                var r = await HttpService.GetWithdrawsAsync(page);
+                pages = r.pages;
+
+                items.AddRange(r.items);
+            }
+
+            return items;
         }
     }
 }

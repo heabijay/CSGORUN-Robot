@@ -11,5 +11,7 @@ namespace CSGORUN_Robot.Settings
         public RegexPatterns RegexPatterns { get; set; }
 
         public bool AutoPlaceBet { get; set; }
+
+        public int RequestsDelay { get; set; } = 5500;
     }
 }

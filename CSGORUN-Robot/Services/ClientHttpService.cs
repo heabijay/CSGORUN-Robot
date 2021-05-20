@@ -73,7 +73,7 @@ namespace CSGORUN_Robot.Services
             {
                 Headers =
                 {
-                    { HttpRequestHeader.Referer.ToString(), CSGORUN.Routing.HomeEndpoint + "/profile/" + LastCurrentState?.user?.steamId },
+                    { HttpRequestHeader.Referer.ToString(), CSGORUN.Routing.HomeProfileEndpoint + "/" + LastCurrentState?.user?.steamId },
                 },
                 Content = new StringContent(JsonSerializer.Serialize(data), null, "application/json;charset=UTF-8")
             };
@@ -124,6 +124,18 @@ namespace CSGORUN_Robot.Services
             };
 
             await InvokeRequestAsync(req);
+        }
+
+        public async Task<PaginationResult<WithdrawItem>> GetWithdrawsAsync(int page = 1)
+        {
+            var userId = LastCurrentState?.user?.id ?? (await GetCurrentStateAsync()).user.id;
+
+            var req = new HttpRequestMessage(HttpMethod.Get, new Uri(CSGORUN.Routing.Withdraws(userId, page)))
+            {
+                
+            };
+
+            return await InvokeRequestAsync<PaginationResult<WithdrawItem>>(req);
         }
     }
 }

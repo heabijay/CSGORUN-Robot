@@ -11,5 +11,9 @@
         public const string MarketItems = "https://cloud.this.team/csgo/items.json";
         public const string ExchangeItems = ApiEndpoint + "/marketplace/exchange-items";
         public const string WebSocket = "wss://ws.csgorun.pro/connection/websocket";
+        public const string Profile = ApiEndpoint + "/profile";
+        public const string HomeProfileEndpoint = HomeEndpoint + "/profile";
+
+        public static string Withdraws(int userId, int page = 1) => $"{Profile}/{userId}/withdraws?page={page}";
     }
 }
