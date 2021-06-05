@@ -38,8 +38,9 @@ namespace CSGORUN_Robot.Services.TelegramBotCommands
 
                     var withdraws = await client.GetWithdrawsAsync();
 
-                    await _bot.SendTextMessageAsync(
-                        chatId: message.From.Id,
+                    await _bot.EditMessageTextAsync(
+                        chatId: infoMsg.Chat.Id,
+                        messageId: infoMsg.MessageId,
                         text: $"*{client.HttpService.LastCurrentState.user.name}'s withdrawals:*\n" +
                             $"Withdraw: _{Math.Round(withdraws.Where(t => t.status == WithdrawStatus.WITHDRAWN).Sum(t => t.amount), 2)}$_\n" +
                             $"Deposit: _{client.HttpService.LastCurrentState.user.deposit}$_",
@@ -49,15 +50,14 @@ namespace CSGORUN_Robot.Services.TelegramBotCommands
                 }
                 catch (Exception ex)
                 {
-                    await _bot.SendTextMessageAsync(
-                        chatId: message.From.Id,
+                    await _bot.EditMessageTextAsync(
+                        chatId: infoMsg.Chat.Id,
+                        messageId: infoMsg.MessageId,
                         text: $"Exception: {ex.Message}\n\nStack Trace:\n{ex}",
                         parseMode: ParseMode.Default,
                         disableWebPagePreview: true
                         );
                 }
-
-                await _bot.DeleteMessageAsync(infoMsg.Chat.Id, infoMsg.MessageId);
             }
             else
             {
