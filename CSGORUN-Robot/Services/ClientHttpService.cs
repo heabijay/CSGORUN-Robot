@@ -23,6 +23,8 @@ namespace CSGORUN_Robot.Services
 
         public CurrentState LastCurrentState { get; set; }
 
+        public bool IsAuthorized { get; private set; } = true;
+
         public void UpdateProxy(IWebProxy proxy)
         {
             var old = httpClient;
@@ -46,6 +48,11 @@ namespace CSGORUN_Robot.Services
         protected async Task<T> InvokeRequestAsync<T>(HttpRequestMessage req) where T : new()
         {
             var result = await httpClient.SendAsync(req);
+
+            // Unauthorized handle
+            if (result.StatusCode == HttpStatusCode.Unauthorized) IsAuthorized = false;
+            else if (result.IsSuccessStatusCode) IsAuthorized = true;
+
             result.EnsureSuccessStatusCodeRaw();
             var content = await result.Content.ReadAsStreamAsync();
             var resp = await JsonSerializer.DeserializeAsync<SuccessResponse<T>>(content);

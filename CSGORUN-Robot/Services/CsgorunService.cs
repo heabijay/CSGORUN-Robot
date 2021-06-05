@@ -34,10 +34,10 @@ namespace CSGORUN_Robot.Services
         public event EventHandler<object> MessageReceived;
         public event EventHandler GameStarted;
 
-        public CsgorunService(ILogger<CsgorunService> logger, AppSettings settings, List<ClientWorker> clientWorkers)
+        public CsgorunService(ILogger<CsgorunService> logger, List<ClientWorker> clientWorkers)
         {
             log = logger;
-            clientWorker = clientWorkers[settings.CSGORUN.PrimaryAccountIndex];
+            clientWorker = clientWorkers.FirstOrDefault(t => t.HttpService.IsAuthorized);
 
             var subscriptions = SubscriptionsBuilder
                 .Create()

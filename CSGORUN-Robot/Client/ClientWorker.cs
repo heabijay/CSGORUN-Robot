@@ -27,8 +27,6 @@ namespace CSGORUN_Robot.Client
 
         public ClientWorker(Account account)
         {
-
-
             Account = account;
             HttpService = new ClientHttpService(account.AuthToken, account.Proxy?.ToWebProxy());
             account.PropertyChanged += (s, e) =>
