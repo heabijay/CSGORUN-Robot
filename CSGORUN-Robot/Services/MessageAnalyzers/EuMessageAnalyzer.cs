@@ -1,4 +1,5 @@
 ﻿using CSGORUN_Robot.CSGORUN.WebSocket_DTOs;
+using CSGORUN_Robot.Services.MessageWrappers;
 using CSGORUN_Robot.Settings;
 using System.Collections.Generic;
 using System.Linq;
@@ -6,24 +7,19 @@ using System.Text.RegularExpressions;
 
 namespace CSGORUN_Robot.Services.MessageAnalyzers
 {
-    public class CsgorunEuMessageAnalyzer : IMessageАnalyzer
+    public class EuMessageAnalyzer : MessageAnalyzerBase<EuMessageWrapper>
     {
-        private ChatPayload _message;
-
-        public CsgorunEuMessageAnalyzer(ChatPayload msg)
+        private protected override IEnumerable<string> Analyze(EuMessageWrapper message)
         {
-            _message = msg;
-        }
+            var msg = message.Message;
 
-        public IEnumerable<string> Analyze()
-        {
             //if (text.StartsWith("@")) text = text.Substring(message.IndexOf(',') + 1);
-            if (!IsExclusion(_message))
+            if (!IsExclusion(msg))
             {
                 var patterns = AppSettingsProvider.Provide().CSGORUN.RegexPatterns;
-                var pattern = _message.user.role >= 4 ? patterns.EN_Admins : patterns.Default;
+                var pattern = msg.user.role >= 4 ? patterns.EN_Admins : patterns.Default;
 
-                return Regex.Matches(_message.message, pattern)
+                return Regex.Matches(msg.message, pattern)
                     .Cast<Match>()
                     .Select(t => t.Value);
             }

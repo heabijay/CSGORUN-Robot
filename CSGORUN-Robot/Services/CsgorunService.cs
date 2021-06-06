@@ -1,7 +1,7 @@
 ﻿using CSGORUN_Robot.Client;
-using CSGORUN_Robot.CSGORUN.CustomEventArgs;
 using CSGORUN_Robot.CSGORUN.WebSocket_DTOs;
 using CSGORUN_Robot.Exceptions;
+using CSGORUN_Robot.Services.MessageWrappers;
 using CSGORUN_Robot.Settings;
 using Microsoft.Extensions.Logging;
 using System;
@@ -32,7 +32,7 @@ namespace CSGORUN_Robot.Services
         private static Timer timer = null;
         private WebsocketClient ws = null;
 
-        public event EventHandler<object> MessageReceived;
+        public event EventHandler<IMessageWrapper> MessageReceived;
         public event EventHandler GameStarted;
 
         public CsgorunService(ILogger<CsgorunService> logger, List<ClientWorker> clientWorkers)
@@ -178,7 +178,7 @@ namespace CSGORUN_Robot.Services
                                 {
                                     log.LogDebug("[{0}] {1}: {2}", data.result.channel, msg?.user?.nickname, msg?.message);
 
-                                    MessageReceived?.Invoke(this, new CsgorunMessageEventArgs(channel, msg));
+                                    MessageReceived?.Invoke(this, channel == SubscriptionType.c_ru ? new RuMessageWrapper(msg) as IMessageWrapper : new EuMessageWrapper(msg) as IMessageWrapper);
                                 }
                             }
                             else if (channel is SubscriptionType.game)

@@ -1,4 +1,5 @@
-﻿using CSGORUN_Robot.Settings;
+﻿using CSGORUN_Robot.Services.MessageWrappers;
+using CSGORUN_Robot.Settings;
 using CSGORUN_Robot.Twitch.DTOs;
 using System.Collections.Generic;
 using System.Linq;
@@ -6,20 +7,16 @@ using System.Text.RegularExpressions;
 
 namespace CSGORUN_Robot.Services.MessageAnalyzers
 {
-    public class TwitchMessageAnalyzer : IMessageАnalyzer
+    public class TwitchMessageAnalyzer : MessageAnalyzerBase<TwitchMessageWrapper>
     {
-        private UserMessage _message;
-        public TwitchMessageAnalyzer(UserMessage msg)
+        private protected override IEnumerable<string> Analyze(TwitchMessageWrapper message)
         {
-            _message = msg;
-        }
+            var msg = message.Message;
 
-        public IEnumerable<string> Analyze()
-        {
-            if (_message.Channel.Equals(_message.Nickname, System.StringComparison.OrdinalIgnoreCase))
+            if (msg.Channel.Equals(msg.Nickname, System.StringComparison.OrdinalIgnoreCase))
             {
                 var pattern = AppSettingsProvider.Provide().Twitch.RegexPattern;
-                return Regex.Matches(_message.Message.Trim(), pattern)
+                return Regex.Matches(msg.Message.Trim(), pattern)
                     .Cast<Match>()
                     .Select(t => t.Value);
             }

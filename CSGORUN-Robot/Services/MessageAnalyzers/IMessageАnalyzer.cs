@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using CSGORUN_Robot.Services.MessageWrappers;
+using System.Collections.Generic;
 
 namespace CSGORUN_Robot.Services.MessageAnalyzers
 {
@@ -11,6 +12,8 @@ namespace CSGORUN_Robot.Services.MessageAnalyzers
         /// Performs analyze of message
         /// </summary>
         /// <returns>IEnumerable of promo-codes found</returns>
-        public IEnumerable<string> Analyze();
+        public IEnumerable<string> Analyze(IMessageWrapper message);
+
+        public bool TryHandleMessage(IMessageWrapper message);
     }
 }

@@ -1,4 +1,5 @@
 ﻿using CSGORUN_Robot.CSGORUN.WebSocket_DTOs;
+using CSGORUN_Robot.Services.MessageWrappers;
 using CSGORUN_Robot.Settings;
 using System;
 using System.Collections.Generic;
@@ -7,28 +8,23 @@ using System.Text.RegularExpressions;
 
 namespace CSGORUN_Robot.Services.MessageAnalyzers
 {
-    public class CsgorunRunMessageAnalyzer : IMessageАnalyzer
+    public class RuMessageAnalyzer : MessageAnalyzerBase<RuMessageWrapper>
     {
-        private ChatPayload _message;
-
-        public CsgorunRunMessageAnalyzer(ChatPayload msg)
+        private protected override IEnumerable<string> Analyze(RuMessageWrapper message)
         {
-            _message = msg;
-        }
+            var msg = message.Message;
 
-        public IEnumerable<string> Analyze()
-        {
             //if (text.StartsWith("@")) text = text.Substring(message.IndexOf(',') + 1);
-            if (!IsExclusion(_message))
+            if (!IsExclusion(msg))
             {
                 var patterns = AppSettingsProvider.Provide().CSGORUN.RegexPatterns;
-                var isAdmin = _message.user.role >= 4;
+                var isAdmin = msg.user.role >= 4;
                 var pattern = isAdmin ? patterns.RU_Admins : patterns.Default;
 
                 IEnumerable<string> results = Enumerable.Empty<string>();
                 if (isAdmin)
                 {
-                    var text = _message.message;
+                    var text = msg.message;
 
                     // Special promo decrypt (of anti-bot method)
                     var ltext = text.ToLower();
@@ -62,7 +58,7 @@ namespace CSGORUN_Robot.Services.MessageAnalyzers
                 }
 
                 results = results.Concat(
-                    Regex.Matches(_message.message, pattern)
+                    Regex.Matches(msg.message, pattern)
                         .Cast<Match>()
                         .Select(t => t.Value)
                     );

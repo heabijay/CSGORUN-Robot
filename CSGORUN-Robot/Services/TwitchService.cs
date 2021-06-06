@@ -1,4 +1,5 @@
-﻿using CSGORUN_Robot.Settings;
+﻿using CSGORUN_Robot.Services.MessageWrappers;
+using CSGORUN_Robot.Settings;
 using CSGORUN_Robot.Twitch.DTOs;
 using Microsoft.Extensions.Logging;
 using System;
@@ -17,7 +18,7 @@ namespace CSGORUN_Robot.Services
         private List<string> channels { get; set; } = new List<string>();
         private ILogger log { get; set; }
 
-        public event EventHandler<object> MessageReceived;
+        public event EventHandler<IMessageWrapper> MessageReceived;
 
         private WebsocketClient ws { get; set; }
 
@@ -105,7 +106,7 @@ namespace CSGORUN_Robot.Services
                     if (msg != null)
                     {
                         log.LogDebug("[#{0}] {1}: {2}", msg.Channel, msg.Nickname, msg.Message);
-                        MessageReceived?.Invoke(this, msg);
+                        MessageReceived?.Invoke(this, new TwitchMessageWrapper(msg));
                     }
                 }
                 catch { }
@@ -120,9 +121,9 @@ namespace CSGORUN_Robot.Services
             {
                 try
                 {
-                    int IndexEq = dataraw[i].IndexOf('=');
-                    string Key = dataraw[i].Substring(0, IndexEq);
-                    string Value = dataraw[i][(IndexEq + 1)..];
+                    int indexEq = dataraw[i].IndexOf('=');
+                    string Key = dataraw[i].Substring(0, indexEq);
+                    string Value = dataraw[i][(indexEq + 1)..];
 
                     switch (Key)
                     {

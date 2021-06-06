@@ -1,4 +1,6 @@
-﻿namespace CSGORUN_Robot.Twitch.DTOs
+﻿using CSGORUN_Robot.Services.MessageAnalyzers;
+
+namespace CSGORUN_Robot.Twitch.DTOs
 {
     public class UserMessage
     {
