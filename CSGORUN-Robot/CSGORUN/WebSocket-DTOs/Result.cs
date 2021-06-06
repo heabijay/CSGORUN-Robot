@@ -1,6 +1,4 @@
-﻿using System.Text.Json.Serialization;
-
-namespace CSGORUN_Robot.CSGORUN.WebSocket_DTOs
+﻿namespace CSGORUN_Robot.CSGORUN.WebSocket_DTOs
 {
     public class Result<T> where T: class
     {

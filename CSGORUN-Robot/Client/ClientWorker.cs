@@ -130,6 +130,8 @@ namespace CSGORUN_Robot.Client
                     await HttpService.PostActivatePromoAsync(promo);
                     if ((await AppSettingsProvider.ProvideAsync()).CSGORUN.AutoPlaceBet)
                         await PerformDefaultBetAsync();
+
+                    await Task.Delay((await AppSettingsProvider.ProvideAsync()).CSGORUN.RequestsDelay);
                 }
                 catch (HttpRequestRawException ex)
                 {
@@ -159,10 +161,12 @@ namespace CSGORUN_Robot.Client
                     else if (inner.StatusCode == System.Net.HttpStatusCode.NotFound)
                     {
                         log.Warning("[{0}] {1}'s: Promo '{2}' - Not found!", nameof(PromoProcessThread), HttpService.LastCurrentState.user.name, promo);
+                        await Task.Delay((await AppSettingsProvider.ProvideAsync()).CSGORUN.RequestsDelay);
                     }
                     else
                     {
                         log.Error("[{0}] {1}'s: Promo '{2}' - Exception. Details: {3}", nameof(PromoProcessThread), HttpService.LastCurrentState.user.name, promo, content);
+                        await Task.Delay((await AppSettingsProvider.ProvideAsync()).CSGORUN.RequestsDelay);
                     }
                 }
 
@@ -182,12 +186,14 @@ namespace CSGORUN_Robot.Client
                     throw new BalanceLessTargetException($"You wanna buy an item with price {price}, but your balance is {HttpService.LastCurrentState.user.balance}");
 
                 var items = await HttpService.GetMarketItemsAsync();
-                var itemIdObj = items?.FirstOrDefault(t => Convert.ToDouble(t[6]) == price)?[0];
+                var itemIdObj = items?.FirstOrDefault(t => ((JsonElement)t[6]).GetDouble() == price)?[0];
 
                 if (itemIdObj == null)
                     throw new MarketItemNotFoundException($"Item with described parameters not found on market");
 
-                item = Convert.ToInt32(itemIdObj);
+                var itemId = ((JsonElement)itemIdObj).GetInt32();
+
+                item = await HttpService.PostBuyItemAsync(itemId);
             }
 
             return item.Value;
@@ -201,6 +207,12 @@ namespace CSGORUN_Robot.Client
             {
                 var itemId = await ProvideItemAsync(0.25);
                 await AwaitGameStartAsync();
+
+                // Random Delay
+                int randDelay = random.Next(750, 2250);
+                log.Information("[{0}] {1}: Game starting... Awaiting delay {2}ms.", nameof(PromoProcessThread), HttpService.LastCurrentState.user.name, randDelay);
+                await Task.Delay(randDelay);
+
                 await HttpService.PostMakeBetAsync(itemId, 1.01);
                 log.Information("[{0}] {1}: Bet placed success!", nameof(PerformDefaultBetAsync), HttpService.LastCurrentState.user.name);
             }
@@ -211,7 +223,7 @@ namespace CSGORUN_Robot.Client
             }
             catch (Exception ex)
             {
-                log.Error("[{0}] {1}: !", nameof(PromoProcessThread), HttpService.LastCurrentState.user.name, ex.Message);
+                log.Error(ex, "[{0}] {1}:", nameof(PromoProcessThread), HttpService.LastCurrentState.user.name);
             }
         }
 

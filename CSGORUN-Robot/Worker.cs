@@ -83,6 +83,14 @@ namespace CSGORUN_Robot
             Parsers.ForEach(t => t.Stop());
         }
 
+        public void EnqueuePromo(string promo)
+        {
+            foreach (var client in Clients)
+            {
+                client.EnqueuePromo(promo);
+            }
+        }
+
         private async void OnMessageAsync(object sender, IMessageWrapper data)
         {
             var analyzer = GetАnalyzer(data);
@@ -94,10 +102,7 @@ namespace CSGORUN_Robot
 
                 foreach (var promo in promos)
                 {
-                    foreach (var client in Clients)
-                    {
-                        client.EnqueuePromo(promo);
-                    }
+                    EnqueuePromo(promo);
                 }
             }
         }

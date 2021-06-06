@@ -47,6 +47,17 @@ namespace CSGORUN_Robot.Settings
                 {
                     using StreamReader sr = new(SettingsPath);
                     current = await JsonSerializer.DeserializeAsync<AppSettings>(sr.BaseStream);
+                    
+                    foreach (var account in current.CSGORUN.Accounts)
+                    {
+                        account.PropertyChanged += (s, e) =>
+                        {
+                            if (e.PropertyName == nameof(account.AuthToken))
+                            {
+                                File.WriteAllText(SettingsPath, JsonSerializer.Serialize(current));
+                            }
+                        };
+                    }
                 }
                 catch (Exception e)
                 {

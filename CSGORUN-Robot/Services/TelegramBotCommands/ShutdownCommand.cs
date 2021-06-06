@@ -60,7 +60,7 @@ namespace CSGORUN_Robot.Services.TelegramBotCommands
                 GenerateCode();
                 await _bot.SendTextMessageAsync(
                     chatId: message.Chat.Id,
-                    text: $"Use `/shutdown <code>` to force shutdown the CSGORUN-Robot.\n\nYour code: *{_code}*",
+                    text: $"Use `/{Command} <code>` to force shutdown the CSGORUN-Robot.\n\nYour code: *{_code}*",
                     parseMode: ParseMode.Markdown,
                     disableWebPagePreview: true
                     );

@@ -14,6 +14,7 @@ namespace CSGORUN_Robot.Services
     public class ClientHttpService
     {
         protected HttpClient httpClient { get; set; } = new HttpClient().SetCSGORUNHttpHeaders();
+        private readonly ILogger _log = Log.Logger.ForContext<ClientHttpService>();
 
         public ClientHttpService(string authToken, IWebProxy proxy = null)
         {
@@ -49,13 +50,14 @@ namespace CSGORUN_Robot.Services
         protected async Task InvokeRequestAsync(HttpRequestMessage req) => await InvokeRequestAsync<object>(req);
         protected async Task<T> InvokeRequestAsync<T>(HttpRequestMessage req) where T : new()
         {
+            _log.Debug("[{0}] {1} executing {2} => {3}", nameof(InvokeRequestAsync), LastCurrentState?.user?.name, req?.Method?.Method, req.RequestUri.OriginalString);
             var result = await httpClient.SendAsync(req);
 
             // Handle of unauthorized state
             if (result.StatusCode == HttpStatusCode.Unauthorized)
             {
                 if (IsAuthorized) 
-                    Log.Logger.ForContext<ClientHttpService>().Fatal("Account '{1}' unauthorized!", this.LastCurrentState.user.name);
+                    _log.Fatal("Account '{0}' unauthorized!", LastCurrentState.user.name);
                 IsAuthorized = false;
             }
             else if (result.IsSuccessStatusCode) IsAuthorized = true;
@@ -94,6 +96,7 @@ namespace CSGORUN_Robot.Services
 
             var balance = await InvokeRequestAsync<BalanceUpdate>(req);
             LastCurrentState.user.balance = balance.balance + balance.added ?? 0;
+            _log.Write(Serilog.Events.LogEventLevel.Error, "[{0}] {1} has been activated promo '{2}'. Balance (+{3}) = {4}", nameof(PostActivatePromoAsync), LastCurrentState.user.name, promo, balance.added ?? 0, LastCurrentState.user.balance);
         }
 
         public async Task<List<List<object>>> GetMarketItemsAsync()
@@ -103,7 +106,11 @@ namespace CSGORUN_Robot.Services
 
             };
 
-            return await InvokeRequestAsync<List<List<object>>>(req);
+            var result = await httpClient.SendAsync(req);
+            result.EnsureSuccessStatusCodeRaw();
+            var content = await result.Content.ReadAsStreamAsync();
+            var resp = await JsonSerializer.DeserializeAsync<MarketResponse>(content);
+            return resp.data;
         }
 
         public async Task<int> PostBuyItemAsync(int itemId)
@@ -111,7 +118,7 @@ namespace CSGORUN_Robot.Services
             var data = new ItemsNeedExchange()
             {
                 userItemIds = new(),
-                wishItemIds = new(itemId)
+                wishItemIds = new() { itemId }
             };
 
             var req = new HttpRequestMessage(HttpMethod.Post, new Uri(CSGORUN.Routing.ExchangeItems))
@@ -128,7 +135,7 @@ namespace CSGORUN_Robot.Services
         {
             var data = new PlaceBet()
             {
-                userItemIds = new(itemId),
+                userItemIds = new() { itemId },
                 auto = autoCoefficient
             };
 
