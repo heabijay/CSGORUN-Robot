@@ -18,18 +18,10 @@ namespace CSGORUN_Robot.Services.MessageAnalyzers
 
         public virtual bool TryHandleMessage(IMessageWrapper message)
         {
-            if (message == null)
-                return false;
-
-            try
-            {
-                _ = (T)message;
+            if (message != null && message is T)
                 return true;
-            }
-            catch
-            {
-                return false;
-            }
+
+            return false;
         }
     }
 }

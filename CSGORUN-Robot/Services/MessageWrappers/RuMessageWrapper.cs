@@ -8,7 +8,5 @@ namespace CSGORUN_Robot.Services.MessageWrappers
         {
             
         }
-
-        
     }
 }
