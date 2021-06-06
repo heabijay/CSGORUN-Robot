@@ -11,5 +11,9 @@ namespace CSGORUN_Robot.Settings
         public bool AutoPlaceBet { get; set; }
 
         public int RequestsDelay { get; set; } = 5500;
+
+        public PromoCache PromoCache { get; set; }
+
+        public List<string> PromoExclusion { get; set; }
     }
 }

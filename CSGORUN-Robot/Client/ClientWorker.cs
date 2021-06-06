@@ -1,15 +1,20 @@
 ﻿using CSGORUN_Robot.CSGORUN.DTOs;
 using CSGORUN_Robot.CSGORUN.Exceptions;
 using CSGORUN_Robot.Exceptions;
+using CSGORUN_Robot.Extensions;
 using CSGORUN_Robot.Services;
 using CSGORUN_Robot.Settings;
+using Microsoft.Extensions.DependencyInjection;
 using Serilog;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
+using System.Net.Http;
 using System.Text;
 using System.Text.Json;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace CSGORUN_Robot.Client
@@ -22,6 +27,9 @@ namespace CSGORUN_Robot.Client
         private Task promoProcessThread;
         private readonly ILogger log = Log.Logger.ForContext<ClientWorker>();
         private static Random random = new Random();
+
+        private readonly TimeSpan _promoCacheLifetime = TimeSpan.FromMinutes(AppSettingsProvider.Provide().CSGORUN.PromoCache.Lifetime_Minutes);
+        private readonly Dictionary<string, DateTime> _promoCache = new();
 
         public ClientHttpService HttpService { get; set; }
 
@@ -40,7 +48,8 @@ namespace CSGORUN_Robot.Client
 
         public void EnqueuePromo(string promo)
         {
-            promoQueue.Add(promo);
+            if (HttpService.IsAuthorized)
+                promoQueue.Add(promo);
         }
 
 
@@ -50,10 +59,27 @@ namespace CSGORUN_Robot.Client
             promoProcessThread = Task.Run(PromoProcessThread);
         }
 
+        private void CacheCleanup()
+        {
+            var activeFrom = DateTime.Now - _promoCacheLifetime;
+            var toDelete = _promoCache.Where(t => t.Value <= activeFrom).Select(t => t.Key);
+            foreach (var key in toDelete)
+            {
+                _promoCache.Remove(key);   
+            }
+        }
+
         public async void PromoProcessThread()
         {
             foreach (var promo in promoQueue.GetConsumingEnumerable())
             {
+                CacheCleanup();
+                if (_promoCache.ContainsKey(promo.ToLower()))
+                {
+                    log.Information("{0} - '{1}': Promo was already checked.", nameof(PromoProcessThread), promo);
+                    continue;
+                }
+
                 var receivedTime = DateTime.Now;
 
                 GetCurrentState:
@@ -67,7 +93,8 @@ namespace CSGORUN_Robot.Client
                     if (inner.StatusCode == System.Net.HttpStatusCode.Unauthorized)
                     {
                         log.Fatal("[{0}] {1}'s CurrentState request returns unauthorized!", nameof(PromoProcessThread), HttpService.LastCurrentState.user.name);
-                        break;
+                        promoQueue.Clear();
+                        continue;
                     }
                     else if (inner.StatusCode == System.Net.HttpStatusCode.TooManyRequests)
                     {
@@ -101,10 +128,13 @@ namespace CSGORUN_Robot.Client
                 try
                 {
                     await HttpService.PostActivatePromoAsync(promo);
+                    if ((await AppSettingsProvider.ProvideAsync()).CSGORUN.AutoPlaceBet)
+                        await PerformDefaultBetAsync();
                 }
                 catch (HttpRequestRawException ex)
                 {
                     var inner = ex.InnerException;
+                    var content = await ex.Content.ReadAsStringAsync();
                     if (inner.StatusCode == System.Net.HttpStatusCode.Unauthorized)
                     {
                         log.Fatal("[{0}] {1}'s CurrentState request returns unauthorized!", nameof(PromoProcessThread), HttpService.LastCurrentState.user.name);
@@ -118,19 +148,26 @@ namespace CSGORUN_Robot.Client
                     }
                     else if (inner.StatusCode == System.Net.HttpStatusCode.Forbidden)
                     {
-                        var content = await ex.Content.ReadAsStringAsync();
                         log.Warning("[{0}] {1}'s: Promo '{2}' - Cannot be used. Details: {3}", nameof(PromoProcessThread), HttpService.LastCurrentState.user.name, promo, content);
 
                         var d = JsonSerializer.Deserialize<ErrorResponse>(content);
-                        if (d.error == "TESAK_DIDNT_KILL_HIMSELF")
+                        if (d.error == "TESAK_DIDNT_KILL_HIMSELF" && (await AppSettingsProvider.ProvideAsync()).CSGORUN.AutoPlaceBet)
                         {
-
+                            await PerformDefaultBetAsync();
                         }
                     }
-                    //else if ()
-
-                    
+                    else if (inner.StatusCode == System.Net.HttpStatusCode.NotFound)
+                    {
+                        log.Warning("[{0}] {1}'s: Promo '{2}' - Not found!", nameof(PromoProcessThread), HttpService.LastCurrentState.user.name, promo);
+                    }
+                    else
+                    {
+                        log.Error("[{0}] {1}'s: Promo '{2}' - Exception. Details: {3}", nameof(PromoProcessThread), HttpService.LastCurrentState.user.name, promo, content);
+                    }
                 }
+
+                // Promo encache
+                _promoCache.Add(promo.ToLower(), DateTime.Now);
             }
         }
 
@@ -156,6 +193,37 @@ namespace CSGORUN_Robot.Client
             return item.Value;
         }
 
+        public async Task PerformDefaultBetAsync()
+        {
+            Retry:
+            log.Information("[{0}] {1}: Placing bet...", nameof(PerformDefaultBetAsync), HttpService.LastCurrentState.user.name);
+            try
+            {
+                var itemId = await ProvideItemAsync(0.25);
+                await AwaitGameStartAsync();
+                await HttpService.PostMakeBetAsync(itemId, 1.01);
+                log.Information("[{0}] {1}: Bet placed success!", nameof(PerformDefaultBetAsync), HttpService.LastCurrentState.user.name);
+            }
+            catch (HttpRequestRawException ex)
+            {
+                if (ex.InnerException.StatusCode == System.Net.HttpStatusCode.TooManyRequests)
+                    goto Retry;
+            }
+            catch (Exception ex)
+            {
+                log.Error("[{0}] {1}: !", nameof(PromoProcessThread), HttpService.LastCurrentState.user.name, ex.Message);
+            }
+        }
+
+        private async Task AwaitGameStartAsync()
+        {
+            var csgorun = Program.ServiceProvider.GetRequiredService<CsgorunService>();
+            var resetEvent = new ManualResetEvent(false);
+            EventHandler awaiter = (s, e) => resetEvent.Set();
+            csgorun.GameStarted += awaiter;
+            await Task.Run(() => resetEvent.WaitOne());
+            csgorun.GameStarted -= awaiter;
+        }
 
         public async Task<List<WithdrawItem>> GetWithdrawsAsync()
         {

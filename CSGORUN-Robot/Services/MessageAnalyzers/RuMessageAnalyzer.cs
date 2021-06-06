@@ -1,6 +1,7 @@
 ﻿using CSGORUN_Robot.CSGORUN.WebSocket_DTOs;
 using CSGORUN_Robot.Services.MessageWrappers;
 using CSGORUN_Robot.Settings;
+using Serilog;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -15,7 +16,7 @@ namespace CSGORUN_Robot.Services.MessageAnalyzers
             var msg = message.Message;
 
             //if (text.StartsWith("@")) text = text.Substring(message.IndexOf(',') + 1);
-            if (!IsExclusion(msg))
+            if (!IsExclusionMessage(msg))
             {
                 var patterns = AppSettingsProvider.Provide().CSGORUN.RegexPatterns;
                 var isAdmin = msg.user.role >= 4;
@@ -63,13 +64,15 @@ namespace CSGORUN_Robot.Services.MessageAnalyzers
                         .Select(t => t.Value)
                     );
 
+                results = results.Where(t => !IsExclusionCode(t));
+
                 return results;
             }
 
             return null;
         }
 
-        private static bool IsExclusion(ChatPayload msg)
+        private static bool IsExclusionMessage(ChatPayload msg)
         {
             var text = msg.message;
 
@@ -83,6 +86,14 @@ namespace CSGORUN_Robot.Services.MessageAnalyzers
                 return true;
 
             return false;
+        }
+
+        private static bool IsExclusionCode(string text)
+        {
+            Log.Logger.ForContext<RuMessageAnalyzer>().Debug("Promo '{0}' is in exclusion list!", text);
+
+            var exclusions = AppSettingsProvider.Provide().CSGORUN.PromoExclusion;
+            return exclusions.Any(t => t.Equals(text, StringComparison.OrdinalIgnoreCase));
         }
     }
 }

@@ -5,6 +5,7 @@ using System;
 using System.Collections.Generic;
 using System.Net;
 using System.Net.Http;
+using System.Text;
 using System.Text.Json;
 using System.Threading.Tasks;
 
@@ -88,7 +89,7 @@ namespace CSGORUN_Robot.Services
                 {
                     { HttpRequestHeader.Referer.ToString(), CSGORUN.Routing.HomeProfileEndpoint + "/" + LastCurrentState?.user?.steamId },
                 },
-                Content = new StringContent(JsonSerializer.Serialize(data), null, "application/json;charset=UTF-8")
+                Content = new StringContent(JsonSerializer.Serialize(data), Encoding.UTF8, "application/json")
             };
 
             var balance = await InvokeRequestAsync<BalanceUpdate>(req);
@@ -115,7 +116,7 @@ namespace CSGORUN_Robot.Services
 
             var req = new HttpRequestMessage(HttpMethod.Post, new Uri(CSGORUN.Routing.ExchangeItems))
             {
-                Content = new StringContent(JsonSerializer.Serialize(data), null, "application/json;charset=UTF-8")
+                Content = new StringContent(JsonSerializer.Serialize(data), Encoding.UTF8, "application/json")
             };
 
             var resp = await InvokeRequestAsync<ItemsExchange>(req);
@@ -133,7 +134,7 @@ namespace CSGORUN_Robot.Services
 
             var req = new HttpRequestMessage(HttpMethod.Post, new Uri(CSGORUN.Routing.MakeBet))
             {
-                Content = new StringContent(JsonSerializer.Serialize(data), null, "application/json;charset=UTF-8")
+                Content = new StringContent(JsonSerializer.Serialize(data), Encoding.UTF8, "application/json")
             };
 
             await InvokeRequestAsync(req);

@@ -86,11 +86,19 @@ namespace CSGORUN_Robot
         private async void OnMessageAsync(object sender, IMessageWrapper data)
         {
             var analyzer = GetАnalyzer(data);
-            var promo = analyzer.Analyze(data);
+            var promos = analyzer.Analyze(data);
             
-            if (promo?.Count() > 0)
+            if (promos?.Count() > 0)
             {
-                log.LogInformation("{0} promo found: {1}", analyzer.GetType().Name, string.Join("; ", promo));
+                log.LogInformation("{0} promo found: {1}", analyzer.GetType().Name, string.Join("; ", promos));
+
+                foreach (var promo in promos)
+                {
+                    foreach (var client in Clients)
+                    {
+                        client.EnqueuePromo(promo);
+                    }
+                }
             }
         }
 

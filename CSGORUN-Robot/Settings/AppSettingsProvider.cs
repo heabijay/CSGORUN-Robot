@@ -101,7 +101,13 @@ namespace CSGORUN_Robot.Settings
                     EN_Admins = "Pattern for english chat admins. Dont forget about bypass quatation mark using escape char.",
                     RU_Admins = "Pattern for russian chat admins. Dont forget about bypass quatation mark using escape char.",
                 },
-                AutoPlaceBet = false
+                AutoPlaceBet = false,
+                PromoCache = new(),
+                PromoExclusion = new()
+                {
+                    "CSGORUN",
+                    "YOURUN"
+                }
             },
             Twitch = new()
             {
