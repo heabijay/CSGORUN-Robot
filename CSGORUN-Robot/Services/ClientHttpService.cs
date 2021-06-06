@@ -1,5 +1,6 @@
 ﻿using CSGORUN_Robot.CSGORUN.DTOs;
 using CSGORUN_Robot.Extensions;
+using Serilog;
 using System;
 using System.Collections.Generic;
 using System.Net;
@@ -49,8 +50,13 @@ namespace CSGORUN_Robot.Services
         {
             var result = await httpClient.SendAsync(req);
 
-            // Unauthorized handle
-            if (result.StatusCode == HttpStatusCode.Unauthorized) IsAuthorized = false;
+            // Handle of unauthorized state
+            if (result.StatusCode == HttpStatusCode.Unauthorized)
+            {
+                if (IsAuthorized) 
+                    Log.Logger.ForContext<ClientHttpService>().Fatal("Account '{1}' unauthorized!", this.LastCurrentState.user.name);
+                IsAuthorized = false;
+            }
             else if (result.IsSuccessStatusCode) IsAuthorized = true;
 
             result.EnsureSuccessStatusCodeRaw();

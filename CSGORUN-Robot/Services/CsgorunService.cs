@@ -24,12 +24,13 @@ namespace CSGORUN_Robot.Services
 
         private readonly ILogger log;
 
-        private readonly ClientWorker clientWorker;
+        private ClientWorker _currentClientWorker;
+        private readonly List<ClientWorker> _clientWorkers;
 
         public bool IsActive => ws != null && ws.IsRunning;
 
         private static Timer timer = null;
-        private readonly WebsocketClient ws = null;
+        private WebsocketClient ws = null;
 
         public event EventHandler<object> MessageReceived;
         public event EventHandler GameStarted;
@@ -37,7 +38,7 @@ namespace CSGORUN_Robot.Services
         public CsgorunService(ILogger<CsgorunService> logger, List<ClientWorker> clientWorkers)
         {
             log = logger;
-            clientWorker = clientWorkers.FirstOrDefault(t => t.HttpService.IsAuthorized);
+            _clientWorkers = clientWorkers;
 
             var subscriptions = SubscriptionsBuilder
                 .Create()
@@ -48,11 +49,25 @@ namespace CSGORUN_Robot.Services
 
             subscriptionsStr = string.Join('\n', subscriptions.Select(t => JsonSerializer.Serialize(t)));
 
+            WebSocketInit();
+        }
+
+        public void WebSocketInit()
+        {
+            ws?.Dispose();
+
+            _currentClientWorker = _clientWorkers.FirstOrDefault(t => t.HttpService.IsAuthorized);
+            if (_currentClientWorker == null)
+            {
+                log.LogCritical("[WS] Available account doesn't found! The service will be stopped!");
+                return;
+            }
+
             ws = new WebsocketClient(new Uri(CSGORUN.Routing.WebSocket), () => new ClientWebSocket()
             {
                 Options =
                 {
-                    Proxy = clientWorker?.Account?.Proxy?.ToWebProxy()
+                    Proxy = _currentClientWorker?.Account?.Proxy?.ToWebProxy()
                 }
             })
             {
@@ -94,7 +109,7 @@ namespace CSGORUN_Robot.Services
         }
         private void OnReconnect(ReconnectionInfo recon)
         {
-            ws?.Send(@"{""params"":{""token"":""" + clientWorker?.HttpService?.LastCurrentState?.centrifugeToken + @"""},""id"":1}");
+            ws?.Send(@"{""params"":{""token"":""" + _currentClientWorker?.HttpService?.LastCurrentState?.centrifugeToken + @"""},""id"":1}");
 
             log.LogInformation("[WS] Connected: {0}", recon.Type);
         }
@@ -120,12 +135,13 @@ namespace CSGORUN_Robot.Services
                             await Task.Delay(2500);
                             try
                             {
-                                await clientWorker.HttpService.GetCurrentStateAsync();
+                                await _currentClientWorker.HttpService.GetCurrentStateAsync();
                                 break;
                             }
                             catch (HttpRequestRawException ex) when (ex.InnerException.StatusCode == HttpStatusCode.Unauthorized)
                             {
-                                log.LogCritical("[WS] CurrentState request returns unauthorized!");
+                                WebSocketInit();
+                                if (ws != null) Start();
                                 return;
                             }
                             catch (Exception ex)
@@ -155,11 +171,15 @@ namespace CSGORUN_Robot.Services
 
                             if (channel is (SubscriptionType.c_ru or SubscriptionType.c_en))
                             {
-                                var msg = JsonSerializer.Deserialize<ChatData>(data.result.data.data.RootElement.ToString()).payload;
+                                var chatData = JsonSerializer.Deserialize<ChatData>(data.result.data.data.RootElement.ToString());
+                                var msg = chatData.payload;
 
-                                log.LogDebug("[{0}] {1}: {2}", data.result.channel, msg?.user?.nickname, msg?.message);
+                                if (chatData.a.Equals("new", StringComparison.OrdinalIgnoreCase))
+                                {
+                                    log.LogDebug("[{0}] {1}: {2}", data.result.channel, msg?.user?.nickname, msg?.message);
 
-                                MessageReceived?.Invoke(this, new CsgorunMessageEventArgs(channel, msg));
+                                    MessageReceived?.Invoke(this, new CsgorunMessageEventArgs(channel, msg));
+                                }
                             }
                             else if (channel is SubscriptionType.game)
                             {
