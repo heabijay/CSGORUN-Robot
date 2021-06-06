@@ -81,7 +81,7 @@ namespace CSGORUN_Robot.Services.MessageAnalyzers
 
             if ((text.StartsWith("https://", StringComparison.OrdinalIgnoreCase) ||
                 text.StartsWith("http://", StringComparison.OrdinalIgnoreCase) ||
-                (text.StartsWith("data:image/", StringComparison.OrdinalIgnoreCase) && text.Contains(";base64,", System.StringComparison.OrdinalIgnoreCase)))
+                (text.StartsWith("data:image/", StringComparison.OrdinalIgnoreCase) && text.Contains(";base64,", StringComparison.OrdinalIgnoreCase)))
                 && !text.Contains(' '))
                 return true;
 
@@ -90,10 +90,14 @@ namespace CSGORUN_Robot.Services.MessageAnalyzers
 
         private static bool IsExclusionCode(string text)
         {
-            Log.Logger.ForContext<RuMessageAnalyzer>().Debug("Promo '{0}' is in exclusion list!", text);
-
             var exclusions = AppSettingsProvider.Provide().CSGORUN.PromoExclusion;
-            return exclusions.Any(t => t.Equals(text, StringComparison.OrdinalIgnoreCase));
+            if (exclusions.Any(t => t.Equals(text, StringComparison.OrdinalIgnoreCase)))
+            {
+                Log.Logger.ForContext<RuMessageAnalyzer>().Debug("Promo '{0}' is in exclusion list!", text);
+                return true;
+            }
+
+            return false;
         }
     }
 }

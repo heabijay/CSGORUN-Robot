@@ -3,6 +3,8 @@ using CSGORUN_Robot.Settings.Exceptions;
 using Serilog;
 using System;
 using System.IO;
+using System.Text;
+using System.Text.Encodings.Web;
 using System.Text.Json;
 using System.Threading.Tasks;
 
@@ -54,7 +56,7 @@ namespace CSGORUN_Robot.Settings
                         {
                             if (e.PropertyName == nameof(account.AuthToken))
                             {
-                                File.WriteAllText(SettingsPath, JsonSerializer.Serialize(current));
+                                File.WriteAllText(SettingsPath, JsonSerializer.Serialize(current, new JsonSerializerOptions() { WriteIndented = true, Encoder = JavaScriptEncoder.UnsafeRelaxedJsonEscaping }));
                             }
                         };
                     }

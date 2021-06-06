@@ -76,7 +76,7 @@ namespace CSGORUN_Robot.Client
                 CacheCleanup();
                 if (_promoCache.ContainsKey(promo.ToLower()))
                 {
-                    log.Information("{0} - '{1}': Promo was already checked.", nameof(PromoProcessThread), promo);
+                    log.Information("[{0}] {1} - '{2}': Promo was already checked.", nameof(PromoProcessThread), HttpService.LastCurrentState.user.name, promo);
                     continue;
                 }
 
