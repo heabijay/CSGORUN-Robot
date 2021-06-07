@@ -49,7 +49,7 @@ namespace CSGORUN_Robot.Client
         public void EnqueuePromo(string promo)
         {
             if (HttpService.IsAuthorized)
-                promoQueue.Add(promo);
+                promoQueue.Add(promo.Trim());
         }
 
 
