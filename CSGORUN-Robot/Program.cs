@@ -15,6 +15,7 @@ using System.Runtime.InteropServices;
 using System.Text;
 using System.Text.Json;
 using System.Threading;
+using Websocket.Client;
 
 namespace CSGORUN_Robot
 {
@@ -79,8 +80,10 @@ namespace CSGORUN_Robot
             var settings = AppSettingsProvider.Provide();
             var loggerConfig = new LoggerConfiguration()
                 .MinimumLevel.Debug()
+                .MinimumLevel.Override(typeof(WebsocketClient).FullName, Serilog.Events.LogEventLevel.Fatal)
                 .Enrich.FromLogContext()
                 .WriteTo.Console()
+                //.WriteTo.Console(outputTemplate: "{Timestamp:yyyy-MM-dd HH:mm:ss.fff zzz} [{Level}] [{SourceContext}] {Message}{NewLine}{Exception}")
                 .WriteTo.File(
                     path: Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "CSGORUN-Robot.log"),
                     restrictedToMinimumLevel: Serilog.Events.LogEventLevel.Warning,
