@@ -114,7 +114,7 @@ namespace CSGORUN_Robot.Client
 
                 // Random Delay
                 TimeSpan currentDelay = DateTime.Now - receivedTime;
-                int randDelay = random.Next(1000, 2500);
+                int randDelay = random.Next(1250, 2500);
 
                 int currentMs = (int)currentDelay.TotalMilliseconds;
                 if (currentMs < randDelay)
