@@ -79,7 +79,7 @@ namespace CSGORUN_Robot.Services
             }
         }
 
-        private async Task SendMessageToOwnerAsync(string text, ParseMode parseMode = ParseMode.Default, bool disableWebPagePreview = false)
+        public async Task SendMessageToOwnerAsync(string text, ParseMode parseMode = ParseMode.Default, bool disableWebPagePreview = false)
         {
             await _bot.SendTextMessageAsync(_ownerId, text, parseMode, disableWebPagePreview);
         }

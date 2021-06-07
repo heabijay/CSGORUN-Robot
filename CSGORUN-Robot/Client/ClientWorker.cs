@@ -127,9 +127,12 @@ namespace CSGORUN_Robot.Client
                 ActivatePromo:
                 try
                 {
-                    await HttpService.PostActivatePromoAsync(promo);
+                    var balance = await HttpService.PostActivatePromoAsync(promo);
                     if ((await AppSettingsProvider.ProvideAsync()).CSGORUN.AutoPlaceBet)
                         await PerformDefaultBetAsync();
+
+                    var bot = Program.ServiceProvider.GetRequiredService<TelegramBotService>();
+                    await bot.SendMessageToOwnerAsync(string.Format("[{0}] {1}: Promo '{2}' was activated! (+{3}$). Balance: {4}$", nameof(PromoProcessThread), HttpService.LastCurrentState.user.name, promo, balance.added ?? 0, HttpService.LastCurrentState.user.balance));
 
                     await Task.Delay((await AppSettingsProvider.ProvideAsync()).CSGORUN.RequestsDelay);
                 }

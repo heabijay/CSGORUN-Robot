@@ -24,7 +24,7 @@ namespace CSGORUN_Robot.Services
             UpdateToken(authToken);
         }
 
-        public CurrentState LastCurrentState { get; set; }
+        public CurrentState LastCurrentState { get; private set; }
 
         public bool IsAuthorized { get; private set; } = true;
 
@@ -81,7 +81,7 @@ namespace CSGORUN_Robot.Services
             return resp;
         }
 
-        public async Task PostActivatePromoAsync(string promo)
+        public async Task<BalanceUpdate> PostActivatePromoAsync(string promo)
         {
             var data = new Promo() { code = promo };
 
@@ -96,7 +96,7 @@ namespace CSGORUN_Robot.Services
 
             var balance = await InvokeRequestAsync<BalanceUpdate>(req);
             LastCurrentState.user.balance = balance.balance + balance.added ?? 0;
-            _log.Error("[{0}] {1} has been activated promo '{2}'. Balance (+{3}) = {4}", nameof(PostActivatePromoAsync), LastCurrentState.user.name, promo, balance.added ?? 0, LastCurrentState.user.balance);
+            return balance;
         }
 
         public async Task<List<List<object>>> GetMarketItemsAsync()
