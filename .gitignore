@@ -6,6 +6,9 @@
 # Settings
 settings.json
 
+# Batches
+send*.cmd
+
 # User-specific files
 *.rsuser
 *.suo
