@@ -172,6 +172,11 @@ namespace CSGORUN_Robot.Client
                         await Task.Delay((await AppSettingsProvider.ProvideAsync()).CSGORUN.RequestsDelay);
                     }
                 }
+                catch (Exception ex)
+                {
+                    log.Error(ex, "[{0}] {1}'s: Promo '{2}' - Exception.", nameof(PromoProcessThread), HttpService.LastCurrentState.user.name, promo);
+                    continue;
+                }
 
                 // Promo encache
                 _promoCache.Add(promo.ToLower(), DateTime.Now);
