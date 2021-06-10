@@ -20,24 +20,25 @@ namespace CSGORUN_Robot.Services
 {
     public class CsgorunService : IParserService
     {
-        private readonly string subscriptionsStr;
-
-        private readonly ILogger log;
-
-        private ClientWorker _currentClientWorker;
-        private readonly List<ClientWorker> _clientWorkers;
-
-        public bool IsActive => ws != null && ws.IsRunning;
-
-        private static Timer timer = null;
-        private WebsocketClient ws = null;
+        public bool IsActive => _ws != null && _ws.IsRunning;
 
         public event EventHandler<IMessageWrapper> MessageReceived;
         public event EventHandler GameStarted;
 
+        private readonly string _subscriptionsStr;
+
+        private readonly ILogger _log;
+
+        private ClientWorker _currentClientWorker;
+        private readonly List<ClientWorker> _clientWorkers;
+
+        private static Timer _timer = null;
+        private WebsocketClient _ws = null;
+        
+
         public CsgorunService(ILogger<CsgorunService> logger, List<ClientWorker> clientWorkers)
         {
-            log = logger;
+            _log = logger;
             _clientWorkers = clientWorkers;
 
             var subscriptions = SubscriptionsBuilder
@@ -47,23 +48,23 @@ namespace CSGORUN_Robot.Services
                 .Add(SubscriptionType.c_ru)
                 .Build();
 
-            subscriptionsStr = string.Join('\n', subscriptions.Select(t => JsonSerializer.Serialize(t)));
+            _subscriptionsStr = string.Join('\n', subscriptions.Select(t => JsonSerializer.Serialize(t)));
 
             WebSocketInit();
         }
 
         public void WebSocketInit()
         {
-            ws?.Dispose();
+            _ws?.Dispose();
 
             _currentClientWorker = _clientWorkers.FirstOrDefault(t => t.HttpService.IsAuthorized);
             if (_currentClientWorker == null)
             {
-                log.LogCritical("[WS] Available account doesn't found! The service will be stopped!");
+                _log.LogCritical("[WS] Available account doesn't found! The service will be stopped!");
                 return;
             }
 
-            ws = new WebsocketClient(new Uri(CSGORUN.Routing.WebSocket), () => new ClientWebSocket()
+            _ws = new WebsocketClient(new Uri(CSGORUN.Routing.WebSocket), () => new ClientWebSocket()
             {
                 Options =
                 {
@@ -73,19 +74,19 @@ namespace CSGORUN_Robot.Services
             {
                 ErrorReconnectTimeout = TimeSpan.FromSeconds(5)
             };
-            ws.MessageReceived.Subscribe(OnMessageAsync);
-            ws.DisconnectionHappened.Subscribe(OnDisconnect);
-            ws.ReconnectionHappened.Subscribe(OnReconnect);
+            _ws.MessageReceived.Subscribe(OnMessageAsync);
+            _ws.DisconnectionHappened.Subscribe(OnDisconnect);
+            _ws.ReconnectionHappened.Subscribe(OnReconnect);
         }
 
         public void Start()
         {
-            ws.Start();
+            _ws.Start();
 
-            timer = new Timer(
+            _timer = new Timer(
                 new TimerCallback(obj =>
                 {
-                    ws?.Send(subscriptionsStr);
+                    _ws?.Send(_subscriptionsStr);
                 }),
                 null,
                 TimeSpan.FromMinutes(15),
@@ -95,23 +96,23 @@ namespace CSGORUN_Robot.Services
 
         public void Stop()
         {
-            if (ws != null && ws.IsRunning)
-                ws.Stop(WebSocketCloseStatus.Empty, "Stopped.");
-            timer.Dispose();
+            if (_ws != null && _ws.IsRunning)
+                _ws.Stop(WebSocketCloseStatus.Empty, "Stopped.");
+            _timer.Dispose();
         }
 
         private void OnDisconnect(DisconnectionInfo disc)
         {
-            log.LogInformation("[WS] Disconnected due {0}", disc.Type);
+            _log.LogInformation("[WS] Disconnected due {0}", disc.Type);
 
             if (disc.Type == DisconnectionType.ByServer)
-                ws.Reconnect();
+                _ws.Reconnect();
         }
         private void OnReconnect(ReconnectionInfo recon)
         {
-            ws?.Send(@"{""params"":{""token"":""" + _currentClientWorker?.HttpService?.LastCurrentState?.centrifugeToken + @"""},""id"":1}");
+            _ws?.Send(@"{""params"":{""token"":""" + _currentClientWorker?.HttpService?.LastCurrentState?.centrifugeToken + @"""},""id"":1}");
 
-            log.LogInformation("[WS] Connected: {0}", recon.Type);
+            _log.LogInformation("[WS] Connected: {0}", recon.Type);
         }
 
         private static bool IsUnauthorizedMessage(string msg) => msg.EndsWith("\"error\":{\"code\":101,\"message\":\"unauthorized\"}}");
@@ -127,7 +128,7 @@ namespace CSGORUN_Robot.Services
                 {
                     if (IsUnauthorizedMessage(dataRaw))
                     {
-                        log.LogInformation("[WS] Message returns unauthorized.");
+                        _log.LogInformation("[WS] Message returns unauthorized.");
                         Stop();
 
                         do
@@ -141,12 +142,12 @@ namespace CSGORUN_Robot.Services
                             catch (HttpRequestRawException ex) when (ex.InnerException.StatusCode == HttpStatusCode.Unauthorized)
                             {
                                 WebSocketInit();
-                                if (ws != null) Start();
+                                if (_ws != null) Start();
                                 return;
                             }
                             catch (Exception ex)
                             {
-                                log.LogError(ex, "[WS] CurrentState request exception.");
+                                _log.LogError(ex, "[WS] CurrentState request exception.");
                             }
                         }
                         while (true);
@@ -156,8 +157,8 @@ namespace CSGORUN_Robot.Services
                     }
                     else if (IsAuthorizedMessage(dataRaw))
                     {
-                        ws.Send(subscriptionsStr);
-                        log.LogInformation("[WS] Subscriptions sent.");
+                        _ws.Send(_subscriptionsStr);
+                        _log.LogInformation("[WS] Subscriptions sent.");
                         return;
                     }
 
@@ -176,7 +177,7 @@ namespace CSGORUN_Robot.Services
 
                                 if (chatData.a.Equals("new", StringComparison.OrdinalIgnoreCase))
                                 {
-                                    log.LogDebug("[{0}] {1}: {2}", data.result.channel, msg?.user?.nickname, msg?.message);
+                                    _log.LogDebug("[{0}] {1}: {2}", data.result.channel, msg?.user?.nickname, msg?.message);
 
                                     MessageReceived?.Invoke(this, channel == SubscriptionType.c_ru ? new RuMessageWrapper(msg) as IMessageWrapper : new EuMessageWrapper(msg) as IMessageWrapper);
                                 }

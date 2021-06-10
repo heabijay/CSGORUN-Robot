@@ -15,7 +15,7 @@ namespace CSGORUN_Robot.Tests
         [TestMethod]
         public void Serialize()
         {
-            var settings = new Settings.AppSettings();
+            var settings = new AppSettings();
             settings.CSGORUN.Accounts = new List<Account>
             {
                 new Account()

@@ -13,7 +13,7 @@ namespace CSGORUN_Robot.Services
 {
     public class ClientHttpService
     {
-        protected HttpClient httpClient { get; set; } = new HttpClient().SetCSGORUNHttpHeaders();
+        private protected HttpClient _httpClient { get; set; } = new HttpClient().SetCSGORUNHttpHeaders();
         private readonly ILogger _log = Log.Logger.ForContext<ClientHttpService>();
 
         public ClientHttpService(string authToken, IWebProxy proxy = null)
@@ -30,8 +30,8 @@ namespace CSGORUN_Robot.Services
 
         public void UpdateProxy(IWebProxy proxy)
         {
-            var old = httpClient;
-            httpClient = new HttpClient(
+            var old = _httpClient;
+            _httpClient = new HttpClient(
                 new HttpClientHandler()
                 {
                     Proxy = proxy,
@@ -44,14 +44,14 @@ namespace CSGORUN_Robot.Services
 
         public void UpdateToken(string authToken)
         {
-            httpClient.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("JWT", authToken);
+            _httpClient.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("JWT", authToken);
         }
 
         protected async Task InvokeRequestAsync(HttpRequestMessage req) => await InvokeRequestAsync<object>(req);
         protected async Task<T> InvokeRequestAsync<T>(HttpRequestMessage req) where T : new()
         {
             _log.Debug("[{0}] {1} executing {2} => {3}", nameof(InvokeRequestAsync), LastCurrentState?.user?.name, req?.Method?.Method, req.RequestUri.OriginalString);
-            var result = await httpClient.SendAsync(req);
+            var result = await _httpClient.SendAsync(req);
 
             // Handle of unauthorized state
             if (result.StatusCode == HttpStatusCode.Unauthorized)
@@ -106,7 +106,7 @@ namespace CSGORUN_Robot.Services
 
             };
 
-            var result = await httpClient.SendAsync(req);
+            var result = await _httpClient.SendAsync(req);
             result.EnsureSuccessStatusCodeRaw();
             var content = await result.Content.ReadAsStreamAsync();
             var resp = await JsonSerializer.DeserializeAsync<MarketResponse>(content);

@@ -18,18 +18,19 @@ namespace CSGORUN_Robot
 {
     public class Worker
     {
-        private readonly ILogger log;
-        private readonly AppSettings settings;
-        private readonly TelegramBotService _telegramBotService;
         public List<ClientWorker> Clients { get; private set; }
         public List<IParserService> Parsers { get; private set; } = new List<IParserService>();
+
+        private readonly ILogger _log;
+        private readonly AppSettings _settings;
+        private readonly TelegramBotService _telegramBotService;
 
         private List<IMessageАnalyzer> _messageАnalyzers;
 
         public Worker(ILogger<Worker> logger, AppSettings settings, TelegramBotService telegramBotService, TwitchService twitch, CsgorunService csgorun, List<ClientWorker> clientWorkers)
         {
-            log = logger;
-            this.settings = settings;
+            _log = logger;
+            this._settings = settings;
             _telegramBotService = telegramBotService;
             InitializeAnalyzers();
 
@@ -51,7 +52,7 @@ namespace CSGORUN_Robot
 
         public bool TokenTest()
         {
-            log.LogInformation("[{0}] Running", nameof(TokenTest));
+            _log.LogInformation("[{0}] Running", nameof(TokenTest));
 
             bool isSuccess = true;
 
@@ -60,13 +61,13 @@ namespace CSGORUN_Robot
                 try
                 {
                     var state = Clients[i].HttpService.GetCurrentStateAsync().GetAwaiter().GetResult();
-                    log.LogInformation("[{0}#{1}] {2} - {3}$", nameof(TokenTest), i, state.user.name, state.user.balance);
+                    _log.LogInformation("[{0}#{1}] {2} - {3}$", nameof(TokenTest), i, state.user.name, state.user.balance);
                 }
                 catch (HttpRequestRawException ex)
                 {
                     isSuccess = false;
                     var inner = ex.InnerException;
-                    log.LogError("[{0}#{1}] {2} - {3}", nameof(TokenTest), i, (int)inner?.StatusCode, inner?.StatusCode);
+                    _log.LogError("[{0}#{1}] {2} - {3}", nameof(TokenTest), i, (int)inner?.StatusCode, inner?.StatusCode);
                 }
             });
 
@@ -98,7 +99,7 @@ namespace CSGORUN_Robot
             
             if (promos?.Count() > 0)
             {
-                log.LogInformation("{0} promo found: {1}", analyzer.GetType().Name, string.Join("; ", promos));
+                _log.LogInformation("{0} promo found: {1}", analyzer.GetType().Name, string.Join("; ", promos));
 
                 foreach (var promo in promos)
                 {

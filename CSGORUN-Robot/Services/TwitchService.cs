@@ -15,38 +15,35 @@ namespace CSGORUN_Robot.Services
 {
     public class TwitchService : IParserService
     {
-        private List<string> channels { get; set; } = new List<string>();
-        private ILogger log { get; set; }
-
+        public bool IsActive => _ws != null && _ws.IsRunning;
         public event EventHandler<IMessageWrapper> MessageReceived;
 
-        private WebsocketClient ws { get; set; }
-
-        public bool IsActive => ws != null && ws.IsRunning;
-
-        private Timer timer = null;
+        private List<string> _channels { get; set; } = new List<string>();
+        private ILogger _log { get; set; }
+        private WebsocketClient _ws { get; set; }
+        private Timer _timer = null;
 
         public TwitchService(ILogger<TwitchService> logger, AppSettings settings)
         {
-            log = logger;
-            channels = settings?.Twitch?.Channels?.Split(',')?.Select(t => t.Trim().Trim('@', '#').ToLower())?.ToList();
+            _log = logger;
+            _channels = settings?.Twitch?.Channels?.Split(',')?.Select(t => t.Trim().Trim('@', '#').ToLower())?.ToList();
 
-            ws = new WebsocketClient(new Uri(Twitch.Routing.WebSocketUrl))
+            _ws = new WebsocketClient(new Uri(Twitch.Routing.WebSocketUrl))
             {
                 ReconnectTimeout = null,
                 ErrorReconnectTimeout = TimeSpan.FromSeconds(5)
             };
-            ws.MessageReceived.Subscribe(OnMessage);
-            ws.DisconnectionHappened.Subscribe(OnDisconnect);
-            ws.ReconnectionHappened.Subscribe(OnReconnect);
+            _ws.MessageReceived.Subscribe(OnMessage);
+            _ws.DisconnectionHappened.Subscribe(OnDisconnect);
+            _ws.ReconnectionHappened.Subscribe(OnReconnect);
         }
 
         public void Start()
         {
-            ws.Start();
+            _ws.Start();
 
-            timer = new Timer(
-                new TimerCallback(obj => { ws.Send("PING"); }),
+            _timer = new Timer(
+                new TimerCallback(obj => { _ws.Send("PING"); }),
                 null,
                 0,
                 (int)TimeSpan.FromMinutes(5).TotalMilliseconds
@@ -55,33 +52,33 @@ namespace CSGORUN_Robot.Services
 
         public void Stop()
         {
-            if (ws != null && ws.IsRunning)
-                ws.Stop(WebSocketCloseStatus.Empty, "Stopped.");
-            timer?.Dispose();
+            if (_ws != null && _ws.IsRunning)
+                _ws.Stop(WebSocketCloseStatus.Empty, "Stopped.");
+            _timer?.Dispose();
         }
 
         private void OnDisconnect(DisconnectionInfo disc)
         {
-            log.LogInformation("[WS-T] Disconnected due {0}", disc.Type);
+            _log.LogInformation("[WS-T] Disconnected due {0}", disc.Type);
 
             if (disc.Type == DisconnectionType.ByServer)
             {
-                ws.Reconnect();
+                _ws.Reconnect();
             }
         }
         private void OnReconnect(ReconnectionInfo recon)
         {
-            ws.SendInstant("CAP REQ :twitch.tv/tags twitch.tv/commands");
-            ws.SendInstant("PASS SCHMOOPIIE");
-            ws.SendInstant("NICK justinfan6288");
-            ws.SendInstant("USER justinfan6288 8 * :justinfan6288");
+            _ws.SendInstant("CAP REQ :twitch.tv/tags twitch.tv/commands");
+            _ws.SendInstant("PASS SCHMOOPIIE");
+            _ws.SendInstant("NICK justinfan6288");
+            _ws.SendInstant("USER justinfan6288 8 * :justinfan6288");
 
-            foreach (string channel in channels ?? Enumerable.Empty<string>())
+            foreach (string channel in _channels ?? Enumerable.Empty<string>())
             {
-                ws.Send("JOIN #" + channel);
+                _ws.Send("JOIN #" + channel);
             }
 
-            log.LogInformation("[WS-T] Connected: {0}", recon.Type);
+            _log.LogInformation("[WS-T] Connected: {0}", recon.Type);
         }
 
         private void OnMessage(ResponseMessage m)
@@ -92,11 +89,11 @@ namespace CSGORUN_Robot.Services
                 {
                     if (m.Text.StartsWith("PING"))
                     {
-                        ws.Send("PONG");
+                        _ws.Send("PONG");
                         Task.Run(async () =>
                         {
                             await Task.Delay(TimeSpan.FromMinutes(1));
-                            ws?.Send("PING");
+                            _ws?.Send("PING");
                         });
                         return;
                     }
@@ -105,7 +102,7 @@ namespace CSGORUN_Robot.Services
                     var msg = ParseMessage(m.Text);
                     if (msg != null)
                     {
-                        log.LogDebug("[#{0}] {1}: {2}", msg.Channel, msg.Nickname, msg.Message);
+                        _log.LogDebug("[#{0}] {1}: {2}", msg.Channel, msg.Nickname, msg.Message);
                         MessageReceived?.Invoke(this, new TwitchMessageWrapper(msg));
                     }
                 }

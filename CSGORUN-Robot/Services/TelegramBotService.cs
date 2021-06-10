@@ -14,11 +14,11 @@ namespace CSGORUN_Robot.Services
 {
     public class TelegramBotService
     {
-        TelegramBotClient _bot;
-        int _ownerId;
-        ILogger<TelegramBotService> _log;
-
         public List<ITelegramBotCommand> Commands;
+
+        private TelegramBotClient _bot;
+        private int _ownerId;
+        private ILogger<TelegramBotService> _log;
 
         public TelegramBotService(ILogger<TelegramBotService> logger, string botToken, int ownerId)
         {
