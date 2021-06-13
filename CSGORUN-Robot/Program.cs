@@ -58,8 +58,8 @@ namespace CSGORUN_Robot
                 var settings = services.GetService<AppSettings>();
                 return new TelegramBotService(
                     services.GetService<ILogger<TelegramBotService>>(),
-                    settings.Telegram.Notifications.BotToken,
-                    settings.Telegram.Notifications.OwnerId);
+                    settings.Telegram.Bot.BotToken,
+                    settings.Telegram.Bot.OwnerId);
             });
             services.AddSingleton<TwitchService>();
             services.AddSingleton<CsgorunService>();
@@ -89,11 +89,11 @@ namespace CSGORUN_Robot
                     restrictedToMinimumLevel: Serilog.Events.LogEventLevel.Warning,
                     fileSizeLimitBytes: 25000000);
 
-            if (settings?.Telegram?.Notifications?.BotToken != null &&
-                settings?.Telegram?.Notifications?.OwnerId != null)
+            if (settings?.Telegram?.Bot?.BotToken != null &&
+                settings?.Telegram?.Bot?.OwnerId != null)
                 loggerConfig = loggerConfig.WriteTo.Telegram(
-                        botToken: settings?.Telegram?.Notifications?.BotToken,
-                        chatId: settings?.Telegram?.Notifications?.OwnerId.ToString(),
+                        botToken: settings?.Telegram?.Bot?.BotToken,
+                        chatId: settings?.Telegram?.Bot?.OwnerId.ToString(),
                         restrictedToMinimumLevel: Serilog.Events.LogEventLevel.Error);
 
             Log.Logger = loggerConfig.CreateLogger();

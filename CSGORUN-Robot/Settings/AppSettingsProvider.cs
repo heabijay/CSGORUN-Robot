@@ -129,10 +129,21 @@ namespace CSGORUN_Robot.Settings
             },
             Telegram = new()
             {
-                Notifications = new()
+                Bot = new()
                 {
                     BotToken = "1234567890:AAAaaAAaa_AaAAaa-AAaAAAaAAaAaAaAAAA",
                     OwnerId = 0
+                },
+                Aggregator = new()
+                {
+                    ApiHash = "Your telegram API Hash",
+                    ApiId = 0,
+                    PhoneNumber = "+380987654321",
+                    Channels = new()
+                    {
+                        new() { Username = "runcsgo", Regex = "Regex Pattern" },
+                        new() { Username = "runcsgo2", Regex = "Another Pattern" }
+                    }
                 }
             }
         };

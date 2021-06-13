@@ -2,6 +2,7 @@
 {
     public class Telegram
     {
-        public TelegramNotifications Notifications { get; set; }
+        public TelegramAggregator Aggregator { get; set; }
+        public TelegramBot Bot { get; set; }
     }
 }
