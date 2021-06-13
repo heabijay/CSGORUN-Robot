@@ -3,7 +3,7 @@ using System;
 
 namespace CSGORUN_Robot.Services
 {
-    public interface IParserService
+    public interface IAggregatorService
     {
         public event EventHandler<IMessageWrapper> MessageReceived;
         public bool IsActive { get; }

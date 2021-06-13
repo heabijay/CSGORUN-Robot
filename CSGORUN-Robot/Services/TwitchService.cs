@@ -13,7 +13,7 @@ using Websocket.Client.Models;
 
 namespace CSGORUN_Robot.Services
 {
-    public class TwitchService : IParserService
+    public class TwitchService : IAggregatorService
     {
         public bool IsActive => _ws != null && _ws.IsRunning;
         public event EventHandler<IMessageWrapper> MessageReceived;

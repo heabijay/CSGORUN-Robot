@@ -18,7 +18,7 @@ using Websocket.Client.Models;
 
 namespace CSGORUN_Robot.Services
 {
-    public class CsgorunService : IParserService
+    public class CsgorunService : IAggregatorService
     {
         public bool IsActive => _ws != null && _ws.IsRunning;
 

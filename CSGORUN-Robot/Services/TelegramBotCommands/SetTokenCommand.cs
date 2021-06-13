@@ -43,9 +43,9 @@ namespace CSGORUN_Robot.Services.TelegramBotCommands
                         try
                         {
                             await client.HttpService.GetCurrentStateAsync();
-                            var parser = worker.Parsers.Find(t => t.GetType() == typeof(CsgorunService));
-                            if (!parser.IsActive)
-                                parser.Start();
+                            var aggregator = worker.Aggregators.Find(t => t.GetType() == typeof(CsgorunService));
+                            if (!aggregator.IsActive)
+                                aggregator.Start();
 
                             await _bot.EditMessageTextAsync(
                                 chatId: infoMsg.Chat.Id,

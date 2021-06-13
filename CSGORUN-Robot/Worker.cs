@@ -19,7 +19,7 @@ namespace CSGORUN_Robot
     public class Worker
     {
         public List<ClientWorker> Clients { get; private set; }
-        public List<IParserService> Parsers { get; private set; } = new List<IParserService>();
+        public List<IAggregatorService> Aggregators { get; private set; } = new List<IAggregatorService>();
 
         private readonly ILogger _log;
         private readonly AppSettings _settings;
@@ -30,15 +30,15 @@ namespace CSGORUN_Robot
         public Worker(ILogger<Worker> logger, AppSettings settings, TelegramBotService telegramBotService, TwitchService twitch, CsgorunService csgorun, List<ClientWorker> clientWorkers)
         {
             _log = logger;
-            this._settings = settings;
+            _settings = settings;
             _telegramBotService = telegramBotService;
             InitializeAnalyzers();
 
             Clients = clientWorkers;
-            Parsers.Add(twitch);
-            Parsers.Add(csgorun);
+            Aggregators.Add(csgorun);
+            Aggregators.Add(twitch);
 
-            Parsers.ForEach(t => t.MessageReceived += OnMessageAsync);
+            Aggregators.ForEach(t => t.MessageReceived += OnMessageAsync);
             csgorun.GameStarted += OnGameStarted;
         }
 
@@ -76,12 +76,12 @@ namespace CSGORUN_Robot
 
         public void StartParse()
         {
-            Parsers.ForEach(t => t.Start());
+            Aggregators.ForEach(t => t.Start());
         }
 
         public void StopParse()
         {
-            Parsers.ForEach(t => t.Stop());
+            Aggregators.ForEach(t => t.Stop());
         }
 
         public void EnqueuePromo(string promo)
