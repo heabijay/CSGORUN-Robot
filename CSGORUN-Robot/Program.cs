@@ -33,7 +33,8 @@ namespace CSGORUN_Robot
 
             log.Information("Welcome to CSGORUN-Robot!");
 
-            var svc = ActivatorUtilities.CreateInstance<Worker>(host.Services);
+            var svc = ServiceProvider.GetRequiredService<Worker>();
+            ServiceProvider.GetRequiredService<TelegramBotService>();
             if (!svc.TokenTest())
             {
                 log.Fatal("Please, rewrite your tokens to be correct!");
@@ -49,7 +50,6 @@ namespace CSGORUN_Robot
                 .ConfigureServices(ConfigureServices)
                 .ConfigureLogging(ConfigureLogging);
 
-
         public static void ConfigureServices(IServiceCollection services)
         {
             services.AddSingleton(services => AppSettingsProvider.Provide());
@@ -61,13 +61,7 @@ namespace CSGORUN_Robot
                     settings.Telegram.Bot.BotToken,
                     settings.Telegram.Bot.OwnerId);
             });
-            services.AddSingleton<TwitchService>();
-            services.AddSingleton<CsgorunService>();
-            services.AddSingleton<List<ClientWorker>>(services =>
-            {
-                var settings = services.GetService<AppSettings>();
-                return settings.CSGORUN.Accounts.Select(t => new ClientWorker(t)).ToList();
-            });
+
             services.AddSingleton<Worker>();
         }
 

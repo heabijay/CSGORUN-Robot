@@ -3,6 +3,7 @@ using CSGORUN_Robot.CSGORUN.WebSocket_DTOs;
 using CSGORUN_Robot.Exceptions;
 using CSGORUN_Robot.Services.MessageWrappers;
 using CSGORUN_Robot.Settings;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
@@ -30,16 +31,14 @@ namespace CSGORUN_Robot.Services
         private readonly ILogger _log;
 
         private ClientWorker _currentClientWorker;
-        private readonly List<ClientWorker> _clientWorkers;
 
         private static Timer _timer = null;
         private WebsocketClient _ws = null;
         
 
-        public CsgorunService(ILogger<CsgorunService> logger, List<ClientWorker> clientWorkers)
+        public CsgorunService(ILogger<CsgorunService> logger)
         {
             _log = logger;
-            _clientWorkers = clientWorkers;
 
             var subscriptions = SubscriptionsBuilder
                 .Create()
@@ -49,15 +48,15 @@ namespace CSGORUN_Robot.Services
                 .Build();
 
             _subscriptionsStr = string.Join('\n', subscriptions.Select(t => JsonSerializer.Serialize(t)));
-
-            WebSocketInit();
         }
 
         public void WebSocketInit()
         {
             _ws?.Dispose();
 
-            _currentClientWorker = _clientWorkers.FirstOrDefault(t => t.HttpService.IsAuthorized);
+            var worker = Program.ServiceProvider.GetRequiredService<Worker>();
+
+            _currentClientWorker = worker.Clients.FirstOrDefault(t => t.HttpService.IsAuthorized);
             if (_currentClientWorker == null)
             {
                 _log.LogCritical("[WS] Available account doesn't found! The service will be stopped!");
@@ -81,6 +80,8 @@ namespace CSGORUN_Robot.Services
 
         public void Start()
         {
+            if (_ws == null) WebSocketInit();
+
             _ws.Start();
 
             _timer = new Timer(

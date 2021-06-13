@@ -23,10 +23,10 @@ namespace CSGORUN_Robot.Services
         private WebsocketClient _ws { get; set; }
         private Timer _timer = null;
 
-        public TwitchService(ILogger<TwitchService> logger, AppSettings settings)
+        public TwitchService(ILogger<TwitchService> logger)
         {
             _log = logger;
-            _channels = settings?.Twitch?.Channels?.Split(',')?.Select(t => t.Trim().Trim('@', '#').ToLower())?.ToList();
+            _channels = AppSettingsProvider.Provide().Twitch?.Channels?.Split(',')?.Select(t => t.Trim().Trim('@', '#').ToLower())?.ToList();
 
             _ws = new WebsocketClient(new Uri(Twitch.Routing.WebSocketUrl))
             {

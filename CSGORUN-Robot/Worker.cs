@@ -5,6 +5,7 @@ using CSGORUN_Robot.Services.MessageAnalyzers;
 using CSGORUN_Robot.Services.MessageAnalyzers.Exceptions;
 using CSGORUN_Robot.Services.MessageWrappers;
 using CSGORUN_Robot.Settings;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
@@ -19,27 +20,24 @@ namespace CSGORUN_Robot
     public class Worker
     {
         public List<ClientWorker> Clients { get; private set; }
-        public List<IAggregatorService> Aggregators { get; private set; } = new List<IAggregatorService>();
+        public List<IAggregatorService> Aggregators { get; private set; }
 
         private readonly ILogger _log;
         private readonly AppSettings _settings;
-        private readonly TelegramBotService _telegramBotService;
 
         private List<IMessageАnalyzer> _messageАnalyzers;
 
-        public Worker(ILogger<Worker> logger, AppSettings settings, TelegramBotService telegramBotService, TwitchService twitch, CsgorunService csgorun, List<ClientWorker> clientWorkers)
+        public Worker(ILogger<Worker> logger, AppSettings settings)
         {
             _log = logger;
             _settings = settings;
-            _telegramBotService = telegramBotService;
-            InitializeAnalyzers();
 
-            Clients = clientWorkers;
-            Aggregators.Add(csgorun);
-            Aggregators.Add(twitch);
+            Clients = settings.CSGORUN.Accounts.Select(t => new ClientWorker(t)).ToList();
+            InitializeAnalyzers();
+            InitializeAggregators();
 
             Aggregators.ForEach(t => t.MessageReceived += OnMessageAsync);
-            csgorun.GameStarted += OnGameStarted;
+            Aggregators.OfType<CsgorunService>().FirstOrDefault().GameStarted += OnGameStarted;
         }
 
         private void InitializeAnalyzers()
@@ -48,6 +46,22 @@ namespace CSGORUN_Robot
             var filtered = types.Where(t => t.IsClass && !t.IsAbstract && t.GetInterfaces().Contains(typeof(IMessageАnalyzer))).ToList();
 
             _messageАnalyzers = filtered.Select(t => (IMessageАnalyzer)Activator.CreateInstance(t)).ToList();
+        }
+
+        private void InitializeAggregators()
+        {
+            Aggregators = new()
+            {
+                new CsgorunService(Program.ServiceProvider.GetRequiredService<ILogger<CsgorunService>>())
+            };
+
+            var isTwitchAvailable = !string.IsNullOrWhiteSpace(_settings.Twitch?.Channels);
+            if (isTwitchAvailable)
+                Aggregators.Add(new TwitchService(Program.ServiceProvider.GetRequiredService<ILogger<TwitchService>>()));
+
+            var isTelegramAvailable = !string.IsNullOrWhiteSpace(_settings.Telegram?.Aggregator?.ApiHash) && _settings.Telegram?.Aggregator?.ApiId > 0;
+            if (isTelegramAvailable)
+                Aggregators.Add(new TelegramService(Program.ServiceProvider.GetRequiredService<ILogger<TelegramService>>()));
         }
 
         public bool TokenTest()
@@ -92,7 +106,7 @@ namespace CSGORUN_Robot
             }
         }
 
-        private async void OnMessageAsync(object sender, IMessageWrapper data)
+        private void OnMessageAsync(object sender, IMessageWrapper data)
         {
             var analyzer = GetАnalyzer(data);
             var promos = analyzer.Analyze(data);
