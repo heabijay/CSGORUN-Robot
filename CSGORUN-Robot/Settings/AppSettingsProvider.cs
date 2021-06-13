@@ -138,7 +138,6 @@ namespace CSGORUN_Robot.Settings
                 {
                     ApiHash = "Your telegram API Hash",
                     ApiId = 0,
-                    PhoneNumber = "+380987654321",
                     Channels = new()
                     {
                         new() { Username = "runcsgo", Regex = "Regex Pattern" },
