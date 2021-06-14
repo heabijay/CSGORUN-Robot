@@ -10,6 +10,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Telega;
 using Telega.Client;
+using Telega.Rpc.Dto.Functions;
 using Telega.Rpc.Dto.Types;
 using Telegram.Bot.Types.Enums;
 
@@ -26,6 +27,9 @@ namespace CSGORUN_Robot.Services
 
         private TelegramClient _client;
 
+        private Timer _timer = null;
+        private int _timerCounter = -1;
+
         public TelegramService(ILogger<TelegramService> logger)
         {
             _log = logger;
@@ -41,6 +45,46 @@ namespace CSGORUN_Robot.Services
 
             EnsureAuthorizedAsync(_client).GetAwaiter().GetResult();
             EnsureChannelsJoinedAsync(_client, settings.Channels.Select(t => t.Username)).GetAwaiter().GetResult();
+
+            _timer = new Timer(
+                new TimerCallback(async obj =>
+                {
+                    try
+                    {
+                        await _client.Call(new Ping(++_timerCounter));
+                    }
+                    catch (Exception ex)
+                    {
+                        _log.LogWarning(ex, "Telegram ping exception (Ping Counter = {0}).", _timerCounter);
+                    }
+                }),
+                null,
+                0,
+                5000
+            );
+
+            _client.Updates.Stream.Subscribe(update =>
+            {
+                var channelMessages = update.Default?.Updates
+                    .Where(t => t?.NewChannelMessage?.Message?.Default != null)
+                    .Select(t => t.NewChannelMessage.Message.Default);
+
+                if (channelMessages != null)
+                {
+                    var channelData = ((LanguageExt.Arr<Message.DefaultTag>)channelMessages)
+                        .Select(Message => 
+                            (
+                                Message, 
+                                update.Default.Chats.FirstOrDefault(x => x?.Channel?.Id == Message?.PeerId?.Channel?.ChannelId)?.Channel)
+                            );
+
+                    foreach (var data in channelData)
+                    {
+                        _log.LogDebug("[Telegram::ChannelMessage] {0} (@{1}): {2}", data.Channel.Title, data.Channel.Username, data.Message.Message);
+                        MessageReceived?.Invoke(this, new TelegramChannelMessageWrapper(data));
+                    }
+                }
+            });
         }
 
         private async Task<string> BotReadLineAsync()
@@ -122,13 +166,14 @@ namespace CSGORUN_Robot.Services
                 var usernameResult = await client.Contacts.ResolveUsername(username);
                 var channel = usernameResult.Chats[0].Channel;
 
-                await client.Channels.JoinChannel(new InputChannel.DefaultTag(channel.Id, (long)channel.AccessHash));
+                await client.Channels.JoinChannel(new InputChannel.DefaultTag(channel.Id, (long)channel?.AccessHash));
             }
         }
 
         public void Stop()
         {
-            _client.Dispose();
+            _client?.Dispose();
+            _timer?.Dispose();
         }
     }
 }

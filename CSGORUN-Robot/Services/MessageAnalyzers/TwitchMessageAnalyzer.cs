@@ -1,6 +1,5 @@
 ﻿using CSGORUN_Robot.Services.MessageWrappers;
 using CSGORUN_Robot.Settings;
-using CSGORUN_Robot.Twitch.DTOs;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text.RegularExpressions;
