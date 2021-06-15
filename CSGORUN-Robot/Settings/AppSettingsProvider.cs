@@ -12,7 +12,9 @@ namespace CSGORUN_Robot.Settings
 {
     public static class AppSettingsProvider
     {
-        private readonly static string _settingsPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "settings.json");
+        private const string _settingsFilename = "settings.json";
+        private const string _settingsExampleFilename = "settings.example.json";
+
         private static AppSettings _current { get; set; }
         private static ILogger _logger => Log.ForContext(typeof(AppSettingsProvider));
 
@@ -30,7 +32,7 @@ namespace CSGORUN_Robot.Settings
             {
                 try
                 {
-                    using StreamWriter sw = new(Path.Combine(Path.GetDirectoryName(_settingsPath), "settings.example.json"));
+                    using StreamWriter sw = new(_settingsExampleFilename);
                     await JsonSerializer.SerializeAsync(sw.BaseStream, _settingsExample, new JsonSerializerOptions() { WriteIndented = true });
                 }
                 catch (Exception ex)
@@ -38,16 +40,16 @@ namespace CSGORUN_Robot.Settings
                     _logger.Warning("Exception while creating/updating 'settings.example.json': {0}", ex);
                 }
 
-                if (!File.Exists(_settingsPath))
+                if (!File.Exists(_settingsFilename))
                 {
-                    var ex = new SettingsFileNotExistException("Settings file 'settings.json' not exist. Check an example file 'settings.example.json' and make your own settings file.");
-                    _logger.Error("Settings file 'settings.json' not found: {0}. Details", ex);
+                    var ex = new SettingsFileNotExistException($"Settings file '{_settingsFilename}' not exist. Check an example file '{_settingsExampleFilename}' and make your own settings file.");
+                    _logger.Error($"Settings file '{0}' not found: {1}. Details", _settingsFilename, ex);
                     throw ex;
                 }
 
                 try
                 {
-                    using StreamReader sr = new(_settingsPath);
+                    using StreamReader sr = new(_settingsFilename);
                     _current = await JsonSerializer.DeserializeAsync<AppSettings>(sr.BaseStream);
                     
                     foreach (var account in _current.CSGORUN.Accounts)
@@ -56,15 +58,15 @@ namespace CSGORUN_Robot.Settings
                         {
                             if (e.PropertyName == nameof(account.AuthToken))
                             {
-                                File.WriteAllText(_settingsPath, JsonSerializer.Serialize(_current, new JsonSerializerOptions() { WriteIndented = true, Encoder = JavaScriptEncoder.UnsafeRelaxedJsonEscaping }));
+                                File.WriteAllText(_settingsFilename, JsonSerializer.Serialize(_current, new JsonSerializerOptions() { WriteIndented = true, Encoder = JavaScriptEncoder.UnsafeRelaxedJsonEscaping }));
                             }
                         };
                     }
                 }
                 catch (Exception e)
                 {
-                    var ex = new SettingsFileInvalidException("Settings file 'settings.json' parse has been failed. Please, check correction with example file 'settings.example.json'.", e);
-                    _logger.Error("Settings file 'settings.json' scheme is invalid. Details: {0}", ex);
+                    var ex = new SettingsFileInvalidException($"Settings file '{_settingsFilename}' parse has been failed. Please, check correction with example file '{_settingsExampleFilename}'.", e);
+                    _logger.Error("Settings file '{0}' scheme is invalid. Details: {1}", _settingsFilename, ex);
                     throw ex;
                 }
             }

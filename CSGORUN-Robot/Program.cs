@@ -7,13 +7,9 @@ using Microsoft.Extensions.Logging;
 using Serilog;
 using Serilog.Sinks.Telegram;
 using System;
-using System.Collections.Generic;
 using System.IO;
-using System.Linq;
-using System.Net.Http;
 using System.Runtime.InteropServices;
 using System.Text;
-using System.Text.Json;
 using System.Threading;
 using Websocket.Client;
 
@@ -24,6 +20,8 @@ namespace CSGORUN_Robot
         public static IServiceProvider ServiceProvider;
         static void Main(string[] args)
         {
+            Directory.SetCurrentDirectory(AppDomain.CurrentDomain.BaseDirectory);
+
             if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
                 Console.OutputEncoding = Encoding.Unicode;
 
