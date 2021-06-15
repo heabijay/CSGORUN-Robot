@@ -238,7 +238,8 @@ namespace CSGORUN_Robot.Client
 
         private async Task AwaitGameStartAsync()
         {
-            var csgorun = Program.ServiceProvider.GetRequiredService<CsgorunService>();
+            var worker = Program.ServiceProvider.GetRequiredService<Worker>();
+            var csgorun = worker.Aggregators.OfType<CsgorunService>().First();
             var resetEvent = new ManualResetEvent(false);
             EventHandler awaiter = (s, e) => resetEvent.Set();
             csgorun.GameStarted += awaiter;
