@@ -161,12 +161,14 @@ namespace CSGORUN_Robot.Services
 
             foreach (var username in needJoinUsernames)
             {
-                _log.LogInformation("[0] Telegram Aggregator is joining to channel @{1}", nameof(EnsureChannelsJoinedAsync), username);
+                _log.LogInformation("[{0}] Telegram Aggregator is joining to channel @{1}", nameof(EnsureChannelsJoinedAsync), username);
 
                 var usernameResult = await client.Contacts.ResolveUsername(username);
                 var channel = usernameResult.Chats[0].Channel;
 
                 await client.Channels.JoinChannel(new InputChannel.DefaultTag(channel.Id, (long)channel?.AccessHash));
+
+                _log.LogInformation("[{0}] @{1} — Joined!", nameof(EnsureChannelsJoinedAsync), username);
             }
         }
 
