@@ -13,7 +13,7 @@ namespace CSGORUN_Robot.Services.TelegramBotCommands
         }
 
         public override string Command { get; set; } = "tgaggregator";
-        public override string Description { get; set; } = "Input system directly to Telegram Aggregator Account";
+        public override string Description { get; set; } = "Directs messages to Telegram Aggregator Account IO.";
 
         public event EventHandler<string> CommandReceived;
 

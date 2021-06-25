@@ -17,7 +17,7 @@ namespace CSGORUN_Robot.Services.TelegramBotCommands
         public override async Task ExecuteAsync(Message message)
         {
             var sb = new StringBuilder();
-            sb.AppendLine("Hi! I'm CSGORUN-Robot. I know the next commands: ");
+            sb.AppendLine("Hi! I'm CSGORUN-Robot. I know next commands: ");
             foreach (var cmd in _botService.Commands)
             {
                 if (cmd.Command != null)
