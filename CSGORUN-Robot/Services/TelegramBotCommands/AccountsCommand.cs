@@ -33,6 +33,7 @@ namespace CSGORUN_Robot.Services.TelegramBotCommands
                 sb.AppendLine($"#{i}: _{state.name} ({state.balance}$)_");
                 sb.AppendLine($"[CSGORUN]({CSGORUN.Routing.HomeProfileEndpoint}/{state.steamId}) | [Steam](https://steamcommunity.com/profiles/{state.steamId})");
                 sb.AppendLine($"Token: `*****{client.Account.AuthToken.Substring(client.Account.AuthToken.Length - 7)}` *({(client.HttpService.IsAuthorized ? "Authorized" : "Unauthorized")})*");
+                sb.AppendLine($"User-Agent: `{client.Account.UserAgent}`");
                 sb.AppendLine($"Proxy: `{client.Account.Proxy?.Host ?? "null"}`");
                 if (state.items?.Count > 0)
                     foreach (var item in state.items)

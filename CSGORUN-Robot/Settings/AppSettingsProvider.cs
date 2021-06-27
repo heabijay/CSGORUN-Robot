@@ -84,6 +84,7 @@ namespace CSGORUN_Robot.Settings
                     new()
                     {
                         AuthToken = "eyJhbGciOiJIUzI1NiIsInAccount.With.HTTPProxy",
+                        UserAgent = "WARNING!!! NEXT USER-AGENT IS DEFAULT FOR NULL VALUE - Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/80.0.3987.163 Safari/537.36",
                         Proxy = new()
                         {
                             Host = "Proxy.host.com",
@@ -96,6 +97,7 @@ namespace CSGORUN_Robot.Settings
                     new()
                     {
                         AuthToken = "eyJhbGciOiJIUzI1NiIsInAccount.With.SOCKS5Proxy",
+                        UserAgent = "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:84.0) Gecko/20100101 Firefox/84.0",
                         Proxy = new()
                         {
                             Host = "Proxy.host.com",

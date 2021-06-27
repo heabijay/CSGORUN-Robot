@@ -26,7 +26,7 @@ namespace CSGORUN_Robot.Client
         private readonly BlockingCollection<string> _promoQueue = new();
         private Task _promoProcessThread;
         private readonly ILogger _log = Log.Logger.ForContext<ClientWorker>();
-        private static Random _random = new Random();
+        private static readonly Random _random = new Random();
 
         private readonly TimeSpan _promoCacheLifetime = TimeSpan.FromMinutes(AppSettingsProvider.Provide().CSGORUN.PromoCache.Lifetime_Minutes);
         private readonly Dictionary<string, DateTime> _promoCache = new();
@@ -36,11 +36,13 @@ namespace CSGORUN_Robot.Client
         public ClientWorker(Account account)
         {
             Account = account;
-            HttpService = new ClientHttpService(account.AuthToken, account.Proxy?.ToWebProxy());
+            HttpService = new ClientHttpService(account.AuthToken, account.UserAgent, account.Proxy?.ToWebProxy());
             account.PropertyChanged += (s, e) =>
             {
                 if (e.PropertyName == nameof(account.AuthToken))
                     HttpService.UpdateToken(account.AuthToken);
+                else if (e.PropertyName == nameof(account.UserAgent))
+                    HttpService.UpdateUserAgent(account.UserAgent);
             };
 
             StartPromoProcessThread();

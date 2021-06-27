@@ -3,6 +3,7 @@ using CSGORUN_Robot.Extensions;
 using Serilog;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Net;
 using System.Net.Http;
 using System.Text;
@@ -16,11 +17,13 @@ namespace CSGORUN_Robot.Services
         private protected HttpClient _httpClient { get; set; } = new HttpClient().SetCSGORUNHttpHeaders();
         private readonly ILogger _log = Log.Logger.ForContext<ClientHttpService>();
 
-        public ClientHttpService(string authToken, IWebProxy proxy = null)
+        public ClientHttpService(string authToken, string userAgent = null, IWebProxy proxy = null)
         {
+            UpdateUserAgent(userAgent);
+
             if (proxy != null)
                 UpdateProxy(proxy);
-
+            
             UpdateToken(authToken);
         }
 
@@ -28,6 +31,15 @@ namespace CSGORUN_Robot.Services
 
         public bool IsAuthorized { get; private set; } = true;
 
+        public void UpdateUserAgent(string userAgent)
+        {
+            if (_httpClient.DefaultRequestHeaders.Contains("User-Agent"))
+                _httpClient.DefaultRequestHeaders.Remove("User-Agent");
+            
+            if (userAgent != null)
+                _httpClient.DefaultRequestHeaders.Add("User-Agent", userAgent);
+        }
+        
         public void UpdateProxy(IWebProxy proxy)
         {
             var old = _httpClient;
@@ -38,6 +50,7 @@ namespace CSGORUN_Robot.Services
                 }).SetCSGORUNHttpHeaders();
 
             UpdateToken(old?.DefaultRequestHeaders?.Authorization?.Parameter);
+            UpdateUserAgent(old?.DefaultRequestHeaders?.UserAgent?.ToString());
 
             old?.Dispose();
         }
@@ -50,14 +63,14 @@ namespace CSGORUN_Robot.Services
         protected async Task InvokeRequestAsync(HttpRequestMessage req) => await InvokeRequestAsync<object>(req);
         protected async Task<T> InvokeRequestAsync<T>(HttpRequestMessage req) where T : new()
         {
-            _log.Debug("[{0}] {1} executing {2} => {3}", nameof(InvokeRequestAsync), LastCurrentState?.user?.name, req?.Method?.Method, req.RequestUri.OriginalString);
+            _log.Debug("[{0}] {1} executing {2} => {3}.", nameof(InvokeRequestAsync), LastCurrentState?.user?.name, req?.Method?.Method, req.RequestUri.OriginalString);
             var result = await _httpClient.SendAsync(req);
 
             // Handle of unauthorized state
             if (result.StatusCode == HttpStatusCode.Unauthorized)
             {
                 if (IsAuthorized) 
-                    _log.Fatal("Account '{0}' unauthorized!", LastCurrentState.user.name);
+                    _log.Fatal("Account '{0}' unauthorized!", LastCurrentState?.user?.name);
                 IsAuthorized = false;
             }
             else if (result.IsSuccessStatusCode) IsAuthorized = true;

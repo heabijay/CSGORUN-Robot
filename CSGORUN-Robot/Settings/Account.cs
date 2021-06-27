@@ -9,15 +9,29 @@ namespace CSGORUN_Robot.Settings
         public void OnPropertyChanged([CallerMemberName] string prop = "") => PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(prop));
 
 
-        private string _AuthToken;
+        private string _authToken;
         public string AuthToken
         {
-            get => _AuthToken;
+            get => _authToken;
             set
             {
-                if (value != _AuthToken)
+                if (value != _authToken)
                 {
-                    _AuthToken = value;
+                    _authToken = value;
+                    OnPropertyChanged();
+                }
+            }
+        }
+
+        private string _userAgent = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/80.0.3987.163 Safari/537.36";
+        public string UserAgent
+        {
+            get => _userAgent;
+            set
+            {
+                if (value != _userAgent)
+                {
+                    _userAgent = value;
                     OnPropertyChanged();
                 }
             }
@@ -25,15 +39,15 @@ namespace CSGORUN_Robot.Settings
 
 
 
-        private Proxy _Proxy;
+        private Proxy _proxy;
         public Proxy Proxy
         {
-            get => _Proxy;
+            get => _proxy;
             set
             {
-                if (value != _Proxy)
+                if (value != _proxy)
                 {
-                    _Proxy = value;
+                    _proxy = value;
                     OnPropertyChanged();
                 }
             }
