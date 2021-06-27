@@ -5,6 +5,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
@@ -41,7 +42,13 @@ namespace CSGORUN_Robot.Services
         public void Start()
         {
             var settings = AppSettingsProvider.Provide().Telegram.Aggregator;
-            _client = TelegramClient.Connect(settings.ApiId).GetAwaiter().GetResult();
+            var file = new FileSessionStore(
+                Path.Combine(
+                    AppDomain.CurrentDomain.BaseDirectory, 
+                    "session.dat"
+                    )
+                );
+            _client = TelegramClient.Connect(settings.ApiId, file).GetAwaiter().GetResult();
 
             EnsureAuthorizedAsync(_client).GetAwaiter().GetResult();
             EnsureChannelsJoinedAsync(_client, settings.Channels.Select(t => t.Username)).GetAwaiter().GetResult();

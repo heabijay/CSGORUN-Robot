@@ -1,16 +1,16 @@
-﻿using CSGORUN_Robot.Client;
-using CSGORUN_Robot.Services;
+﻿using CSGORUN_Robot.Services;
 using CSGORUN_Robot.Settings;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Serilog;
-using Serilog.Sinks.Telegram;
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading;
+using CommandLine;
 using Websocket.Client;
 
 namespace CSGORUN_Robot
@@ -18,9 +18,10 @@ namespace CSGORUN_Robot
     class Program
     {
         public static IServiceProvider ServiceProvider;
+        public static CommandLineOptions CommandLineOptions = new CommandLineOptions();
         static void Main(string[] args)
         {
-            Directory.SetCurrentDirectory(AppDomain.CurrentDomain.BaseDirectory);
+            ProcessArgs(args);
 
             if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
                 Console.OutputEncoding = Encoding.Unicode;
@@ -41,6 +42,18 @@ namespace CSGORUN_Robot
             svc.StartParse();
 
             new ManualResetEvent(false).WaitOne();
+        }
+
+        public static void ProcessArgs(IEnumerable<string> args)
+        {
+            var parserResult = CommandLine.Parser.Default
+                .ParseArguments<CommandLineOptions>(args)
+                .WithParsed<CommandLineOptions>(
+                    opts => { });
+            CommandLineOptions = parserResult.Value;
+            
+            if (parserResult.Tag == ParserResultType.NotParsed) 
+                Environment.Exit(0);
         }
 
         public static IHostBuilder CreateHostBuilder(string[] args) =>
