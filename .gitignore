@@ -367,3 +367,8 @@ MigrationBackup/
 
 # Fody - auto-generated XML schema
 FodyWeavers.xsd
+/.idea
+/CSGORUN-Robot/send-release-scp-vdsina.sh
+/CSGORUN-Robot/send-release-dll-scp-vdsina.sh
+/CSGORUN-Robot/send-json-scp-vdsina.sh
+/CSGORUN-Robot/publish-ubuntu.20.04.sh

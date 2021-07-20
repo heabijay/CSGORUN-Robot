@@ -29,6 +29,7 @@ namespace CSGORUN_Robot.Client
         private static readonly Random _random = new Random();
 
         private readonly TimeSpan _promoCacheLifetime = TimeSpan.FromMinutes(AppSettingsProvider.Provide().CSGORUN.PromoCache.Lifetime_Minutes);
+        private readonly AppSettings _settings = AppSettingsProvider.Provide();
         private readonly Dictionary<string, DateTime> _promoCache = new();
 
         public ClientHttpService HttpService { get; set; }
@@ -116,7 +117,7 @@ namespace CSGORUN_Robot.Client
 
                 // Random Delay
                 TimeSpan currentDelay = DateTime.Now - receivedTime;
-                int randDelay = _random.Next(1250, 2500);
+                int randDelay = _random.FromRange(_settings.CSGORUN.BeforeActivationDelay);
 
                 int currentMs = (int)currentDelay.TotalMilliseconds;
                 if (currentMs < randDelay)
@@ -130,14 +131,17 @@ namespace CSGORUN_Robot.Client
                 try
                 {
                     var balance = await HttpService.PostActivatePromoAsync(promo);
-                    if ((await AppSettingsProvider.ProvideAsync()).CSGORUN.AutoPlaceBet)
-                        await PerformDefaultBetAsync();
+                    if (_settings.CSGORUN.AutoPlaceBet)
+                    {
+                        var skipGames = _random.FromRange(_settings.CSGORUN.PlaceBetSkipGames);
+                        await PerformDefaultBetAsync(skipGames);
+                    }
 
                     var bot = Program.ServiceProvider.GetRequiredService<TelegramBotService>();
                     _log.Warning("[{0}] {1}: Promo '{2}' was activated! (+{3}$). Balance: {4}$", nameof(PromoProcessThread), HttpService.LastCurrentState.user.name, promo, balance.added ?? 0, HttpService.LastCurrentState.user.balance);
                     await bot.SendMessageToOwnerAsync(string.Format("[{0}] {1}: Promo '{2}' was activated! (+{3}$). Balance: {4}$", nameof(PromoProcessThread), HttpService.LastCurrentState.user.name, promo, balance.added ?? 0, HttpService.LastCurrentState.user.balance));
 
-                    await Task.Delay((await AppSettingsProvider.ProvideAsync()).CSGORUN.RequestsDelay);
+                    await Task.Delay(_settings.CSGORUN.RequestsDelay);
                 }
                 catch (HttpRequestRawException ex)
                 {
@@ -159,7 +163,7 @@ namespace CSGORUN_Robot.Client
                         _log.Warning("[{0}] {1}'s: Promo '{2}' - Cannot be used. Details: {3}", nameof(PromoProcessThread), HttpService.LastCurrentState.user.name, promo, content);
 
                         var d = JsonSerializer.Deserialize<ErrorResponse>(content);
-                        if (d.error == "TESAK_DIDNT_KILL_HIMSELF" && (await AppSettingsProvider.ProvideAsync()).CSGORUN.AutoPlaceBet)
+                        if (d.error == "TESAK_DIDNT_KILL_HIMSELF" && _settings.CSGORUN.AutoPlaceBet)
                         {
                             await PerformDefaultBetAsync();
                         }
@@ -167,12 +171,12 @@ namespace CSGORUN_Robot.Client
                     else if (inner.StatusCode == System.Net.HttpStatusCode.NotFound)
                     {
                         _log.Warning("[{0}] {1}'s: Promo '{2}' - Not found!", nameof(PromoProcessThread), HttpService.LastCurrentState.user.name, promo);
-                        await Task.Delay((await AppSettingsProvider.ProvideAsync()).CSGORUN.RequestsDelay);
+                        await Task.Delay(_settings.CSGORUN.RequestsDelay);
                     }
                     else
                     {
                         _log.Error("[{0}] {1}'s: Promo '{2}' - Exception. Details: {3}", nameof(PromoProcessThread), HttpService.LastCurrentState.user.name, promo, content);
-                        await Task.Delay((await AppSettingsProvider.ProvideAsync()).CSGORUN.RequestsDelay);
+                        await Task.Delay(_settings.CSGORUN.RequestsDelay);
                     }
                 }
                 catch (Exception ex)
@@ -210,17 +214,18 @@ namespace CSGORUN_Robot.Client
             return item.Value;
         }
 
-        public async Task PerformDefaultBetAsync()
+        public async Task PerformDefaultBetAsync(int skipGames = 0)
         {
             Retry:
-            _log.Information("[{0}] {1}: Placing bet...", nameof(PerformDefaultBetAsync), HttpService.LastCurrentState.user.name);
+            _log.Information("[{0}] {1}: Placing bet after {2} games...", nameof(PerformDefaultBetAsync), HttpService.LastCurrentState.user.name, skipGames);
             try
             {
                 var itemId = await ProvideItemAsync(0.25);
-                await AwaitGameStartAsync();
+                for (int i = 0; i < skipGames + 1; i++)
+                    await AwaitGameStartAsync();
 
                 // Random Delay
-                int randDelay = _random.Next(750, 2250);
+                int randDelay = _random.FromRange(_settings.CSGORUN.PlaceBetDelayAfterGameStartDelay);
                 _log.Information("[{0}] {1}: Game starting... Awaiting delay {2}ms.", nameof(PromoProcessThread), HttpService.LastCurrentState.user.name, randDelay);
                 await Task.Delay(randDelay);
 
@@ -251,7 +256,7 @@ namespace CSGORUN_Robot.Client
 
         public async Task<List<WithdrawItem>> GetWithdrawsAsync()
         {
-            var delay = (await AppSettingsProvider.ProvideAsync()).CSGORUN.RequestsDelay;
+            var delay = _settings.CSGORUN.RequestsDelay;
 
             var items = new List<WithdrawItem>();
 
