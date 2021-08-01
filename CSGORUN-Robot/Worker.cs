@@ -37,7 +37,6 @@ namespace CSGORUN_Robot
             InitializeAggregators();
 
             Aggregators.ForEach(t => t.MessageReceived += OnMessageAsync);
-            Aggregators.OfType<CsgorunService>().FirstOrDefault().GameStarted += OnGameStarted;
         }
 
         private void InitializeAnalyzers()
@@ -133,11 +132,6 @@ namespace CSGORUN_Robot
             }
 
             throw new UnsupportedAnalyzerException($"Supported analyzer not found for type {message.GetType()}!");
-        }
-
-        private void OnGameStarted(object sender, EventArgs e)
-        {
-            
         }
     }
 }
