@@ -1,4 +1,5 @@
-﻿using CSGORUN_Robot.CSGORUN.DTOs;
+﻿using CSGORUN_Robot.Client.GameControllers;
+using CSGORUN_Robot.CSGORUN.DTOs;
 using CSGORUN_Robot.CSGORUN.Exceptions;
 using CSGORUN_Robot.Exceptions;
 using CSGORUN_Robot.Extensions;
@@ -31,6 +32,7 @@ namespace CSGORUN_Robot.Client
         private readonly TimeSpan _promoCacheLifetime = TimeSpan.FromMinutes(AppSettingsProvider.Provide().CSGORUN.PromoCache.Lifetime_Minutes);
         private readonly AppSettings _settings = AppSettingsProvider.Provide();
         private readonly Dictionary<string, DateTime> _promoCache = new();
+        private readonly IGameController _defaultGameInteraction;
 
         public ClientHttpService HttpService { get; set; }
 
@@ -45,6 +47,8 @@ namespace CSGORUN_Robot.Client
                 else if (e.PropertyName == nameof(account.UserAgent))
                     HttpService.UpdateUserAgent(account.UserAgent);
             };
+
+            _defaultGameInteraction = new RouletteGameController(this);
 
             StartPromoProcessThread();
         }
@@ -214,22 +218,24 @@ namespace CSGORUN_Robot.Client
             return item.Value;
         }
 
-        public async Task PerformDefaultBetAsync(int skipGames = 0)
+        public async Task PerformDefaultBetAsync(int skipGames = 0, IGameController game = null)
         {
+            game ??= _defaultGameInteraction;
+
             Retry:
             _log.Information("[{0}] {1}: Placing bet after {2} games...", nameof(PerformDefaultBetAsync), HttpService.LastCurrentState.user.name, skipGames);
             try
             {
                 var itemId = await ProvideItemAsync(0.25);
                 for (int i = 0; i < skipGames + 1; i++)
-                    await AwaitGameStartAsync();
+                    await game.AwaitGameStartAsync();
 
                 // Random Delay
                 int randDelay = _random.FromRange(_settings.CSGORUN.PlaceBetDelayAfterGameStartDelay);
                 _log.Information("[{0}] {1}: Game starting... Awaiting delay {2}ms.", nameof(PromoProcessThread), HttpService.LastCurrentState.user.name, randDelay);
                 await Task.Delay(randDelay);
 
-                await HttpService.PostMakeBetAsync(itemId, 1.01);
+                await game.MakeQuickBetAsync(itemId);
                 _log.Information("[{0}] {1}: Bet placed success!", nameof(PerformDefaultBetAsync), HttpService.LastCurrentState.user.name);
             }
             catch (HttpRequestRawException ex)
@@ -243,15 +249,26 @@ namespace CSGORUN_Robot.Client
             }
         }
 
-        private async Task AwaitGameStartAsync()
+        public async Task AwaitCrashGameStartAsync()
         {
             var worker = Program.ServiceProvider.GetRequiredService<Worker>();
             var csgorun = worker.Aggregators.OfType<CsgorunService>().First();
             var resetEvent = new ManualResetEvent(false);
             EventHandler awaiter = (s, e) => resetEvent.Set();
-            csgorun.GameStarted += awaiter;
+            csgorun.CrashGameStarted += awaiter;
             await Task.Run(() => resetEvent.WaitOne());
-            csgorun.GameStarted -= awaiter;
+            csgorun.CrashGameStarted -= awaiter;
+        }
+
+        public async Task AwaitRouletteGameStartAsync()
+        {
+            var worker = Program.ServiceProvider.GetRequiredService<Worker>();
+            var csgorun = worker.Aggregators.OfType<CsgorunService>().First();
+            var resetEvent = new ManualResetEvent(false);
+            EventHandler awaiter = (s, e) => resetEvent.Set();
+            csgorun.RouletteGameStarted += awaiter;
+            await Task.Run(() => resetEvent.WaitOne());
+            csgorun.RouletteGameStarted -= awaiter;
         }
 
         public async Task<List<WithdrawItem>> GetWithdrawsAsync()

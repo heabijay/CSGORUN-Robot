@@ -24,7 +24,8 @@ namespace CSGORUN_Robot.Services
         public bool IsActive => _ws != null && _ws.IsRunning;
 
         public event EventHandler<IMessageWrapper> MessageReceived;
-        public event EventHandler GameStarted;
+        public event EventHandler CrashGameStarted;
+        public event EventHandler RouletteGameStarted;
 
         private readonly string _subscriptionsStr;
 
@@ -45,6 +46,7 @@ namespace CSGORUN_Robot.Services
                 .Add(SubscriptionType.game)
                 .Add(SubscriptionType.c_en)
                 .Add(SubscriptionType.c_ru)
+                .Add(SubscriptionType.roulette)
                 .Build();
 
             _subscriptionsStr = string.Join('\n', subscriptions.Select(t => JsonSerializer.Serialize(t)));
@@ -187,8 +189,13 @@ namespace CSGORUN_Robot.Services
                             {
                                 var type = data.result.data.data.RootElement.GetProperty("type").GetString();
                                 if (type.Equals("start", StringComparison.OrdinalIgnoreCase))
-                                    GameStarted?.Invoke(this, new EventArgs());
-
+                                    CrashGameStarted?.Invoke(this, new EventArgs());
+                            }
+                            else if (channel is SubscriptionType.roulette)
+                            {
+                                var type = data.result.data.data.RootElement.GetProperty("round").GetProperty("status").GetInt32();
+                                if (type.Equals(1))
+                                    RouletteGameStarted?.Invoke(this, new EventArgs());
                             }
                         }
                     }

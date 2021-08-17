@@ -3,7 +3,6 @@ using CSGORUN_Robot.Extensions;
 using Serilog;
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Net;
 using System.Net.Http;
 using System.Text;
@@ -144,15 +143,31 @@ namespace CSGORUN_Robot.Services
             return resp.userItems.newItems[0].id;
         }
 
-        public async Task PostMakeBetAsync(int itemId, double autoCoefficient)
+        public async Task PostCrashMakeBetAsync(int itemId, double autoCoefficient)
         {
-            var data = new PlaceBet()
+            var data = new CrashPlaceBet()
             {
                 userItemIds = new() { itemId },
                 auto = autoCoefficient
             };
 
-            var req = new HttpRequestMessage(HttpMethod.Post, new Uri(CSGORUN.Routing.MakeBet))
+            var req = new HttpRequestMessage(HttpMethod.Post, new Uri(CSGORUN.Routing.CrashMakeBet))
+            {
+                Content = new StringContent(JsonSerializer.Serialize(data), Encoding.UTF8, "application/json")
+            };
+
+            await InvokeRequestAsync(req);
+        }
+
+        public async Task PostRouletteMakeBetAsync(int itemId, RouletteColor color)
+        {
+            var data = new RoulettePlaceBet()
+            {
+                userItemIds = new() { itemId },
+                number = color
+            };
+
+            var req = new HttpRequestMessage(HttpMethod.Post, new Uri(CSGORUN.Routing.RouletteMakeBet))
             {
                 Content = new StringContent(JsonSerializer.Serialize(data), Encoding.UTF8, "application/json")
             };

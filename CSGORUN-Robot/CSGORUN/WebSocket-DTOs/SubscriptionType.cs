@@ -8,6 +8,7 @@
         c_ru,
         c_en,
         lottery,
+        roulette,
         u_ub,
         user_bet,
         u_,

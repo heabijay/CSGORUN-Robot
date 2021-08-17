@@ -2,9 +2,9 @@
 
 namespace CSGORUN_Robot.CSGORUN.DTOs
 {
-    public class PlaceBet
+    public class RoulettePlaceBet : IPlaceBet
     {
         public List<int> userItemIds { get; set; }
-        public double auto { get; set; }
+        public RouletteColor number { get; set; }
     }
 }
