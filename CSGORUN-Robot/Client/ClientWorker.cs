@@ -48,7 +48,7 @@ namespace CSGORUN_Robot.Client
                     HttpService.UpdateUserAgent(account.UserAgent);
             };
 
-            _defaultGameInteraction = new RouletteGameController(this);
+            _defaultGameInteraction = new CrashGameController(this);
 
             StartPromoProcessThread();
         }
